@@ -1,0 +1,129 @@
+{% extends 'base_project.html' %}
+{% block title %}Contrats - Liste{% endblock %}
+{% block extra_css %}
+<style>
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .page-header h1 { font-size: 28px; color: #333; margin: 0; }
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
+  .btn-primary { background: #0052CC; color: white; }
+  .btn-primary:hover { background: #003D99; }
+  .filters { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .filter-group label { font-size: 13px; font-weight: 600; color: #666; }
+  .filter-group select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+  .contracts-table { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #f8f9fa; }
+  th { padding: 15px; text-align: left; font-weight: 600; color: #333; font-size: 14px; border-bottom: 2px solid #0052CC; }
+  td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+  tr:hover { background: #f8f9fa; }
+  .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+  .badge-pending { background: #fff3e0; color: #f57c00; }
+  .badge-active { background: #e8f5e9; color: #2e7d32; }
+  .badge-expired { background: #ffebee; color: #c62828; }
+  .badge-rejected { background: #f3e5f5; color: #7b1fa2; }
+  .badge-suspended { background: #e3f2fd; color: #1976d2; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-outline { background: white; color: #0052CC; border: 1px solid #0052CC; }
+  .btn-outline:hover { background: #0052CC; color: white; }
+  .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+  .empty-state i { font-size: 64px; color: #ddd; margin-bottom: 20px; }
+  .contract-number { font-weight: 600; color: #0052CC; }
+  .amount { font-weight: 600; color: #333; }
+</style>
+{% endblock %}
+{% block content %}
+<div style="padding: 20px;">
+  <div class="page-header">
+    <h1>Liste des contrats</h1>
+    <a href="{% url 'contracts:create' %}" class="btn btn-primary">
+      <i class='bx bx-plus'></i> Nouveau contrat
+    </a>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>Statut</label>
+      <select onchange="window.location.href='?status='+this.value">
+        <option value="">Tous</option>
+        <option value="pending">En attente</option>
+        <option value="active">Actif</option>
+        <option value="expired">Expiré</option>
+        <option value="rejected">Rejeté</option>
+        <option value="suspended">Suspendu</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Type</label>
+      <select onchange="window.location.href='?type='+this.value">
+        <option value="">Tous</option>
+        <option value="capex">CAPEX</option>
+        <option value="opex">OPEX</option>
+        <option value="service">Service</option>
+        <option value="travaux">Travaux</option>
+        <option value="it">IT</option>
+      </select>
+    </div>
+  </div>
+
+  {% if contracts %}
+  <div class="contracts-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Numéro</th>
+          <th>Objet</th>
+          <th>Fournisseur</th>
+          <th>Type</th>
+          <th>Montant</th>
+          <th>Date d'effet</th>
+          <th>Date d'expiration</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for contract in contracts %}
+        <tr>
+          <td><span class="contract-number">{{ contract.numero }}</span></td>
+          <td>{{ contract.objet|truncatewords:8 }}</td>
+          <td>{{ contract.supplier.nom_complet_organisation|truncatewords:5 }}</td>
+          <td>{{ contract.get_type_display }}</td>
+          <td><span class="amount">{{ contract.montant|floatformat:0 }} {{ contract.devise }}</span></td>
+          <td>{{ contract.date_effet|date:"d/m/Y" }}</td>
+          <td>{{ contract.date_expiry|date:"d/m/Y" }}</td>
+          <td>
+            {% if contract.status == 'pending' %}
+            <span class="badge badge-pending">En attente</span>
+            {% elif contract.status == 'active' %}
+            <span class="badge badge-active">Actif</span>
+            {% elif contract.status == 'expired' %}
+            <span class="badge badge-expired">Expiré</span>
+            {% elif contract.status == 'rejected' %}
+            <span class="badge badge-rejected">Rejeté</span>
+            {% else %}
+            <span class="badge badge-suspended">Suspendu</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{% url 'contracts:detail' contract.pk %}" class="btn btn-sm btn-primary">Voir</a>
+            <a href="{% url 'contracts:edit' contract.pk %}" class="btn btn-sm btn-outline">Modifier</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class='bx bx-file'></i>
+    <h3>Aucun contrat</h3>
+    <p>Commencez par créer votre premier contrat</p>
+    <a href="{% url 'contracts:create' %}" class="btn btn-primary" style="margin-top: 20px;">
+      <i class='bx bx-plus'></i> Créer un contrat
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends 'base_project.html' %}
+{% load static %}
+{% block title %}Évaluation - {{ evaluation.supplier.nom_complet_organisation }}{% endblock %}
+{% block extra_css %}
+<style>
+  .detail-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .detail-header { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-left: 4px solid #0052CC; }
+  .detail-header h1 { font-size: 28px; color: #0052CC; margin-bottom: 10px; }
+  .detail-header .meta { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+  .badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .badge-success { background: #e8f5e9; color: #2e7d32; }
+  .badge-primary { background: #e3f2fd; color: #1976d2; }
+  .badge-warning { background: #fff3e0; color: #f57c00; }
+  .badge-danger { background: #ffebee; color: #c62828; }
+  .rating-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; text-align: center; }
+  .rating-card .score { font-size: 64px; font-weight: bold; color: #0052CC; margin-bottom: 10px; }
+  .rating-card .label { font-size: 18px; color: #666; }
+  .criteria-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+  .criteria-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .criteria-card h3 { font-size: 14px; color: #666; margin-bottom: 15px; text-transform: uppercase; }
+  .criteria-card .score { font-size: 36px; font-weight: bold; color: #0052CC; margin-bottom: 10px; }
+  .criteria-card .description { font-size: 13px; color: #666; padding: 10px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #0052CC; }
+  .info-section { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; }
+  .info-section h2 { font-size: 18px; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #0052CC; }
+  .info-row { display: flex; margin-bottom: 15px; }
+  .info-label { font-weight: 600; color: #666; min-width: 200px; }
+  .info-value { color: #333; flex: 1; }
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; margin-right: 10px; }
+  .btn-primary { background: #0052CC; color: white; }
+  .btn-primary:hover { background: #003D99; }
+  .btn-outline { background: white; color: #0052CC; border: 1px solid #0052CC; }
+  .btn-outline:hover { background: #0052CC; color: white; }
+  .btn-danger { background: #dc3545; color: white; }
+  .btn-danger:hover { background: #c82333; }
+  .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  .history-table th { background: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #ddd; }
+  .history-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="detail-container">
+  <div class="detail-header">
+    <h1>Évaluation - {{ evaluation.supplier.nom_complet_organisation }}</h1>
+    <div class="meta">
+      <span style="color: #666;">
+        <i class='bx bx-calendar'></i> {{ evaluation.date_evaluation|date:"d/m/Y à H:i" }}
+      </span>
+      <span style="color: #666;">
+        <i class='bx bx-user'></i> Évaluateur: {{ evaluation.evaluator.email|default:"N/A" }}
+      </span>
+      {% with badge=evaluation.get_rating_badge %}
+      <span class="badge badge-{{ badge.class }}">{{ badge.label }}</span>
+      {% endwith %}
+    </div>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <a href="{% url 'evaluations:edit' evaluation.pk %}" class="btn btn-primary">
+      <i class='bx bx-edit'></i> Modifier
+    </a>
+    <a href="{% url 'evaluations:list' %}" class="btn btn-outline">
+      <i class='bx bx-arrow-back'></i> Retour à la liste
+    </a>
+    <button class="btn btn-danger delete-evaluation-btn" 
+            data-evaluation-id="{{ evaluation.pk }}" 
+            data-supplier-name="{{ evaluation.supplier.nom_complet_organisation }}">
+      <i class='bx bx-trash'></i> Supprimer
+    </button>
+  </div>
+
+  <!-- Note finale -->
+  <div class="rating-card">
+    <div class="score">{{ evaluation.vendor_final_rating }}/10</div>
+    <div class="label">Note finale moyenne</div>
+    <div style="margin-top: 10px; color: #666;">
+      Score total: {{ evaluation.get_total_score }}/50
+    </div>
+  </div>
+
+  <!-- Critères détaillés -->
+  <div class="criteria-grid">
+    <div class="criteria-card">
+      <h3><i class='bx bx-check-circle'></i> Delivery Compliance</h3>
+      <div class="score">{{ evaluation.delivery_compliance }}/10</div>
+      <div class="description">
+        {{ descriptions.delivery_compliance }}
+      </div>
+    </div>
+
+    <div class="criteria-card">
+      <h3><i class='bx bx-time'></i> Delivery Timeline</h3>
+      <div class="score">{{ evaluation.delivery_timeline }}/10</div>
+      <div class="description">
+        {{ descriptions.delivery_timeline }}
+      </div>
+    </div>
+
+    <div class="criteria-card">
+      <h3><i class='bx bx-bulb'></i> Advising Capability</h3>
+      <div class="score">{{ evaluation.advising_capability }}/10</div>
+      <div class="description">
+        {{ descriptions.advising_capability }}
+      </div>
+    </div>
+
+    <div class="criteria-card">
+      <h3><i class='bx bx-support'></i> After Sales QOS</h3>
+      <div class="score">{{ evaluation.after_sales_qos }}/10</div>
+      <div class="description">
+        {{ descriptions.after_sales_qos }}
+      </div>
+    </div>
+
+    <div class="criteria-card">
+      <h3><i class='bx bx-user-voice'></i> Vendor Relationship</h3>
+      <div class="score">{{ evaluation.vendor_relationship }}/10</div>
+      <div class="description">
+        {{ descriptions.vendor_relationship }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Commentaires -->
+  {% if evaluation.comments %}
+  <div class="info-section">
+    <h2><i class='bx bx-comment-detail'></i> Commentaires</h2>
+    <p style="white-space: pre-wrap;">{{ evaluation.comments }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Informations supplémentaires -->
+  <div class="info-section">
+    <h2><i class='bx bx-info-circle'></i> Informations</h2>
+    <div class="info-row">
+      <span class="info-label">Fournisseur:</span>
+      <span class="info-value">
+        <a href="{% url 'suppliers:detail' evaluation.supplier.pk %}" style="color: #0052CC;">
+          {{ evaluation.supplier.nom_complet_organisation }}
+        </a>
+      </span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Date d'évaluation:</span>
+      <span class="info-value">{{ evaluation.date_evaluation|date:"d/m/Y à H:i" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Dernière modification:</span>
+      <span class="info-value">{{ evaluation.date_modification|date:"d/m/Y à H:i" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Évaluateur:</span>
+      <span class="info-value">{{ evaluation.evaluator.email|default:"N/A" }}</span>
+    </div>
+  </div>
+
+  <!-- Historique des évaluations du fournisseur -->
+  {% if supplier_evaluations %}
+  <div class="info-section">
+    <h2><i class='bx bx-history'></i> Autres évaluations de ce fournisseur</h2>
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Note finale</th>
+          <th>Évaluateur</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for eval in supplier_evaluations %}
+        <tr>
+          <td>{{ eval.date_evaluation|date:"d/m/Y" }}</td>
+          <td>
+            <strong>{{ eval.vendor_final_rating }}/10</strong>
+            {% with badge=eval.get_rating_badge %}
+            <span class="badge badge-{{ badge.class }}">{{ badge.label }}</span>
+            {% endwith %}
+          </td>
+          <td>{{ eval.evaluator.email|default:"N/A" }}</td>
+          <td>
+            <a href="{% url 'evaluations:detail' eval.pk %}" class="btn btn-sm btn-primary">
+              Voir
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'evaluations/js/evaluation_actions.js' %}"></script>
+{% endblock %}

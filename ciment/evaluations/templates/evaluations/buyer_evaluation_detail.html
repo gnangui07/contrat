@@ -1,0 +1,189 @@
+{% extends 'base_project.html' %}
+{% load static %}
+{% block title %}Évaluation Acheteur - {{ evaluation.supplier.nom_complet_organisation }}{% endblock %}
+{% block extra_css %}
+<style>
+  .detail-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .detail-header { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-left: 4px solid #FF5722; }
+  .detail-header h1 { font-size: 28px; color: #FF5722; margin-bottom: 10px; }
+  .detail-header .meta { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+  .badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .badge-success { background: #e8f5e9; color: #2e7d32; }
+  .badge-primary { background: #e3f2fd; color: #1976d2; }
+  .badge-warning { background: #fff3e0; color: #f57c00; }
+  .badge-danger { background: #ffebee; color: #c62828; }
+  .rating-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; text-align: center; }
+  .rating-card .score { font-size: 64px; font-weight: bold; color: #FF5722; margin-bottom: 10px; }
+  .rating-card .label { font-size: 18px; color: #666; }
+  .criteria-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+  .criteria-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .criteria-card h3 { font-size: 14px; color: #666; margin-bottom: 15px; text-transform: uppercase; }
+  .criteria-card .score { font-size: 36px; font-weight: bold; color: #FF5722; margin-bottom: 10px; }
+  .criteria-card .description { font-size: 13px; color: #666; padding: 10px; background: #fff3e0; border-radius: 6px; border-left: 3px solid #FF5722; }
+  .info-section { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; }
+  .info-section h2 { font-size: 18px; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #FF5722; }
+  .info-row { display: flex; margin-bottom: 15px; }
+  .info-label { font-weight: 600; color: #666; min-width: 200px; }
+  .info-value { color: #333; flex: 1; }
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; margin-right: 10px; }
+  .btn-primary { background: #FF5722; color: white; }
+  .btn-primary:hover { background: #E64A19; }
+  .btn-outline { background: white; color: #FF5722; border: 1px solid #FF5722; }
+  .btn-outline:hover { background: #FF5722; color: white; }
+  .btn-danger { background: #dc3545; color: white; }
+  .btn-danger:hover { background: #c82333; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="detail-container">
+  <div class="detail-header">
+    <h1><i class='bx bx-shopping-bag'></i> Évaluation Acheteur - {{ evaluation.supplier.nom_complet_organisation }}</h1>
+    <div class="meta">
+      <span style="color: #666;">
+        <i class='bx bx-calendar'></i> {{ evaluation.date_evaluation|date:"d/m/Y à H:i" }}
+      </span>
+      <span style="color: #666;">
+        <i class='bx bx-user'></i> Évaluateur: {{ evaluation.evaluator.email|default:"N/A" }}
+      </span>
+      {% with badge=evaluation.get_rating_badge %}
+      <span class="badge badge-{{ badge.class }}">{{ badge.label }}</span>
+      {% endwith %}
+    </div>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <a href="{% url 'evaluations:buyer_edit' evaluation.pk %}" class="btn btn-primary">
+      <i class='bx bx-edit'></i> Modifier
+    </a>
+    <a href="{% url 'evaluations:buyer_list' %}" class="btn btn-outline">
+      <i class='bx bx-arrow-back'></i> Retour à la liste
+    </a>
+    <button class="btn btn-danger delete-buyer-evaluation-btn" 
+            data-evaluation-id="{{ evaluation.pk }}" 
+            data-supplier-name="{{ evaluation.supplier.nom_complet_organisation }}">
+      <i class='bx bx-trash'></i> Supprimer
+    </button>
+  </div>
+
+  <!-- Note finale -->
+  <div class="rating-card">
+    <div class="score">{{ evaluation.buyer_final_rating }}/10</div>
+    <div class="label">Note finale acheteur moyenne</div>
+    <div style="margin-top: 10px; color: #666;">
+      Score total: {{ evaluation.get_total_score }}/60
+    </div>
+  </div>
+
+  <!-- Critères détaillés -->
+  <div class="criteria-grid">
+    <div class="criteria-card">
+      <h3><i class='bx bx-dollar'></i> Flexibilité sur les prix</h3>
+      <div class="score">{{ evaluation.price_flexibility }}/10</div>
+      <div class="description">
+        {{ descriptions.price_flexibility }}
+      </div>
+    </div>
+
+    <div class="criteria-card">
+      <h3><i class='bx bx-time'></i> Respect des délais RFX</h3>
+      <div class="score">{{ evaluation.rfx_deadline_compliance }}/10</div>
+      <div class="description">
+        {{ descriptions.rfx_deadline_compliance }}
+      </div>
+    </div>
+
+    <div class="criteria-card">
+      <h3><i class='bx bx-bulb'></i> Capacité à conseiller</h3>
+      <div class="score">{{ evaluation.advisory_capability }}/10</div>
+      <div class="description">
+        {{ descriptions.advisory_capability }}
+      </div>
+    </div>
+
+    <div class="criteria-card">
+      <h3><i class='bx bx-phone'></i> Contact relationnel</h3>
+      <div class="score">{{ evaluation.relationship_quality }}/10</div>
+      <div class="description">
+        {{ descriptions.relationship_quality }}
+      </div>
+    </div>
+
+    <div class="criteria-card">
+      <h3><i class='bx bx-file'></i> Qualité des réponses RFx</h3>
+      <div class="score">{{ evaluation.rfx_response_quality }}/10</div>
+      <div class="description">
+        {{ descriptions.rfx_response_quality }}
+      </div>
+    </div>
+
+    <div class="criteria-card">
+      <h3><i class='bx bx-credit-card'></i> Politique de crédit</h3>
+      <div class="score">{{ evaluation.credit_policy }}/10</div>
+      <div class="description">
+        {{ descriptions.credit_policy }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Commentaires -->
+  {% if evaluation.comments %}
+  <div class="info-section">
+    <h2><i class='bx bx-comment'></i> Commentaires</h2>
+    <p style="color: #666; line-height: 1.6;">{{ evaluation.comments }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Historique des évaluations du fournisseur -->
+  {% if supplier_evaluations %}
+  <div class="info-section">
+    <h2><i class='bx bx-history'></i> Autres évaluations acheteur de ce fournisseur</h2>
+    <div style="display: grid; gap: 10px;">
+      {% for eval in supplier_evaluations %}
+      <a href="{% url 'evaluations:buyer_detail' eval.pk %}" style="display: flex; justify-content: space-between; padding: 15px; background: #f8f9fa; border-radius: 6px; text-decoration: none; color: inherit; transition: all 0.2s;">
+        <span>{{ eval.date_evaluation|date:"d/m/Y" }}</span>
+        <span style="font-weight: bold; color: #FF5722;">{{ eval.buyer_final_rating }}/10</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.delete-buyer-evaluation-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const evaluationId = this.dataset.evaluationId;
+      const supplierName = this.dataset.supplierName;
+      
+      Swal.fire({
+        title: 'Confirmer la suppression',
+        html: `Voulez-vous vraiment supprimer l'évaluation acheteur de <strong>${supplierName}</strong> ?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Oui, supprimer',
+        cancelButtonText: 'Annuler'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = `/evaluations/buyer/${evaluationId}/delete/`;
+          
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'csrfmiddlewaretoken';
+          csrfInput.value = '{{ csrf_token }}';
+          form.appendChild(csrfInput);
+          
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

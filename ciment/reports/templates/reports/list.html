@@ -1,0 +1,54 @@
+{% extends 'base_project.html' %}
+
+{% block title %}Rapports - Dangote Cement{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-file-export"></i> Rapports et Exports</h1>
+    <p>Téléchargez les données en format CSV</p>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-contract"></i> Contrats
+            </div>
+            <div class="card-body">
+                <p>Exportez la liste complète des contrats avec tous les détails.</p>
+                <a href="{% url 'reports:export_contracts_csv' %}" class="btn btn-primary btn-block">
+                    <i class="fas fa-download"></i> Télécharger CSV
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-building"></i> Fournisseurs
+            </div>
+            <div class="card-body">
+                <p>Exportez la liste complète des fournisseurs avec leurs informations.</p>
+                <a href="{% url 'reports:export_suppliers_csv' %}" class="btn btn-primary btn-block">
+                    <i class="fas fa-download"></i> Télécharger CSV
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-star"></i> Évaluations
+            </div>
+            <div class="card-body">
+                <p>Exportez les évaluations des fournisseurs avec les scores.</p>
+                <a href="{% url 'reports:export_evaluations_csv' %}" class="btn btn-primary btn-block">
+                    <i class="fas fa-download"></i> Télécharger CSV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,247 @@
+{% extends 'base_project.html' %}
+{% load static %}
+{% block title %}Évaluations Acheteur{% endblock %}
+{% block extra_css %}
+<style>
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .page-header h1 { font-size: 28px; color: #333; margin: 0; }
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
+  .btn-primary { background: #0052CC; color: white; }
+  .btn-primary:hover { background: #003D99; }
+  .mini-counter { display:flex; align-items:center; justify-content:center; gap:8px; width:max-content; margin: 0 auto 10px auto; padding:6px 12px; border:1px solid #e5eaf2; border-radius:999px; background:#fff; color:#0052CC; font-weight:600; font-size:13px; }
+  .filters { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .filter-group label { font-size: 13px; font-weight: 600; color: #666; }
+  .filter-group select, .filter-group input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+  .table-container { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; border: 1px solid #ddd; }
+  thead { background: linear-gradient(135deg, #FF5722, #E64A19); color: white; }
+  thead th { padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border-right: 1px solid rgba(255,255,255,0.2); }
+  thead th:last-child { border-right: none; }
+  tbody tr { border-bottom: 1px solid #ddd; transition: background 0.2s; }
+  tbody tr:hover { background: #f8f9fa; }
+  tbody td { padding: 15px; font-size: 14px; color: #333; border-right: 1px solid #e0e0e0; }
+  tbody td:last-child { border-right: none; }
+  .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+  .badge-success { background: #e8f5e9; color: #2e7d32; }
+  .badge-primary { background: #e3f2fd; color: #1976d2; }
+  .badge-warning { background: #fff3e0; color: #f57c00; }
+  .badge-danger { background: #ffebee; color: #c62828; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-outline { background: white; color: #FF5722; border: 1px solid #FF5722; }
+  .btn-outline:hover { background: #FF5722; color: white; }
+  .btn-danger { background: #dc3545; color: white; }
+  .btn-danger:hover { background: #c82333; }
+  .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+  .empty-state i { font-size: 64px; color: #ddd; margin-bottom: 20px; }
+  .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rating-display { display: flex; align-items: center; gap: 10px; }
+  .rating-value { font-size: 18px; font-weight: bold; color: #FF5722; }
+  .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+  .nav-tab { padding: 10px 20px; background: white; border-radius: 6px; text-decoration: none; color: #666; font-weight: 600; transition: all 0.3s; }
+  .nav-tab:hover { background: #f5f5f5; }
+  .nav-tab.active { background: linear-gradient(135deg, #FF5722, #E64A19); color: white; }
+</style>
+{% endblock %}
+{% block content %}
+<div style="padding: 20px;">
+  <!-- Navigation entre types d'évaluations -->
+  <div class="nav-tabs">
+    <a href="{% url 'evaluations:list' %}" class="nav-tab">
+      <i class='bx bx-package'></i> Évaluations Vendor
+    </a>
+    <a href="{% url 'evaluations:buyer_list' %}" class="nav-tab active">
+      <i class='bx bx-shopping-bag'></i> Évaluations Acheteur
+    </a>
+    <a href="{% url 'evaluations:ranking_overview' %}" class="nav-tab">
+      <i class='bx bx-trophy'></i> Ranking Global
+    </a>
+  </div>
+
+  <div class="page-header">
+    <h1>Évaluations Acheteur</h1>
+    <a href="{% url 'evaluations:buyer_create' %}" class="btn btn-primary">
+      <i class='bx bx-plus'></i> Nouvelle évaluation acheteur
+    </a>
+  </div>
+
+  <!-- Compteur minimal centré -->
+  <div class="mini-counter">
+    <i class='bx bx-bar-chart-alt-2'></i>
+    <span>{{ stats.total }} évaluations acheteur</span>
+  </div>
+
+  <!-- Filtres et Recherche -->
+  <div class="filters">
+    <div class="filter-group" style="flex: 2;">
+      <label>Rechercher</label>
+      <form method="get" style="display: flex; gap: 10px;">
+        <input type="text" name="search" placeholder="Fournisseur, évaluateur, commentaires..." 
+               value="{{ request.GET.search }}" 
+               style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">
+          <i class='bx bx-search'></i> Rechercher
+        </button>
+        {% if request.GET.search %}
+        <a href="{% url 'evaluations:buyer_list' %}" class="btn btn-outline" style="padding: 8px 16px;">
+          <i class='bx bx-x'></i> Effacer
+        </a>
+        {% endif %}
+      </form>
+    </div>
+    <div class="filter-group">
+      <label>Fournisseur</label>
+      <select onchange="window.location.href='?supplier='+this.value">
+        <option value="">Tous</option>
+        {% for supplier in suppliers %}
+        <option value="{{ supplier.id }}" {% if request.GET.supplier == supplier.id|stringformat:"s" %}selected{% endif %}>
+          {{ supplier.nom_complet_organisation }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  {% if evaluations %}
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Fournisseur</th>
+          <th>Note finale</th>
+          <th>Prix</th>
+          <th>Délais RFX</th>
+          <th>Conseil</th>
+          <th>Relation</th>
+          <th>Qualité RFX</th>
+          <th>Crédit</th>
+          <th>Évaluateur</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for evaluation in evaluations %}
+        <tr>
+          <td><strong>{{ evaluation.supplier.nom_complet_organisation }}</strong></td>
+          <td>
+            <div class="rating-display">
+              <span class="rating-value">{{ evaluation.buyer_final_rating }}/10</span>
+              {% with badge=evaluation.get_rating_badge %}
+              <span class="badge badge-{{ badge.class }}">{{ badge.label }}</span>
+              {% endwith %}
+            </div>
+          </td>
+          <td>{{ evaluation.price_flexibility }}/10</td>
+          <td>{{ evaluation.rfx_deadline_compliance }}/10</td>
+          <td>{{ evaluation.advisory_capability }}/10</td>
+          <td>{{ evaluation.relationship_quality }}/10</td>
+          <td>{{ evaluation.rfx_response_quality }}/10</td>
+          <td>{{ evaluation.credit_policy }}/10</td>
+          <td>{{ evaluation.evaluator.email|default:"N/A" }}</td>
+          <td>{{ evaluation.date_evaluation|date:"d/m/Y" }}</td>
+          <td>
+            <div class="action-buttons">
+              <a href="{% url 'evaluations:buyer_detail' evaluation.pk %}" class="btn btn-sm btn-primary">
+                <i class='bx bx-show'></i> 
+              </a>
+              <a href="{% url 'evaluations:buyer_edit' evaluation.pk %}" class="btn btn-sm btn-outline">
+                <i class='bx bx-edit'></i> 
+              </a>
+              <button class="btn btn-sm btn-danger delete-buyer-evaluation-btn" 
+                      data-evaluation-id="{{ evaluation.pk }}" 
+                      data-supplier-name="{{ evaluation.supplier.nom_complet_organisation }}">
+                <i class='bx bx-trash'></i> 
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class='bx bx-shopping-bag'></i>
+    <h3>Aucune évaluation acheteur</h3>
+    <p>Commencez par créer votre première évaluation acheteur</p>
+    <a href="{% url 'evaluations:buyer_create' %}" class="btn btn-primary" style="margin-top: 20px;">
+      <i class='bx bx-plus'></i> Créer une évaluation acheteur
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Données des messages Django pour JavaScript -->
+{% if messages %}
+<script id="django-messages-data" type="application/json">
+[
+  {% for message in messages %}
+  {
+    "tags": "{{ message.tags }}",
+    "message": "{{ message|escapejs }}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Gestion de la suppression des évaluations acheteur
+document.addEventListener('DOMContentLoaded', function() {
+  // Afficher les messages Django
+  const messagesData = document.getElementById('django-messages-data');
+  if (messagesData) {
+    const messages = JSON.parse(messagesData.textContent);
+    messages.forEach(msg => {
+      Swal.fire({
+        icon: msg.tags === 'success' ? 'success' : 'error',
+        title: msg.tags === 'success' ? 'Succès' : 'Erreur',
+        text: msg.message,
+        confirmButtonColor: '#0052CC'
+      });
+    });
+  }
+
+  // Boutons de suppression
+  document.querySelectorAll('.delete-buyer-evaluation-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const evaluationId = this.dataset.evaluationId;
+      const supplierName = this.dataset.supplierName;
+      
+      Swal.fire({
+        title: 'Confirmer la suppression',
+        html: `Voulez-vous vraiment supprimer l'évaluation acheteur de <strong>${supplierName}</strong> ?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Oui, supprimer',
+        cancelButtonText: 'Annuler'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = `/evaluations/buyer/${evaluationId}/delete/`;
+          
+          const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+          if (csrfToken) {
+            form.appendChild(csrfToken.cloneNode());
+          } else {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+          }
+          
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

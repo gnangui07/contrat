@@ -1,0 +1,202 @@
+{% extends 'base_project.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{% if contract %}Modifier{% else %}Créer{% endif %} un contrat{% endblock %}
+{% block extra_css %}
+<style>
+  .form-container { padding: 20px; max-width: 1000px; margin: 0 auto; }
+  .form-header { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-left: 4px solid #0052CC; }
+  .form-header h1 { font-size: 28px; color: #0052CC; margin: 0; }
+  .form-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .form-section { margin-bottom: 30px; }
+  .form-section h2 { font-size: 18px; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #0052CC; display: flex; align-items: center; gap: 10px; }
+  .form-section h2 i { color: #0052CC; }
+  .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group label { font-weight: 600; color: #333; font-size: 14px; }
+  .form-group input, .form-group select, .form-group textarea { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #0052CC; box-shadow: 0 0 0 3px rgba(0,82,204,0.1); }
+  .form-group textarea { min-height: 100px; resize: vertical; }
+  .form-group small { color: #666; font-size: 12px; }
+  .form-actions { display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+  .btn { padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; font-size: 14px; }
+  .btn-primary { background: #0052CC; color: white; }
+  .btn-primary:hover { background: #003D99; }
+  .btn-outline { background: white; color: #0052CC; border: 1px solid #0052CC; }
+  .btn-outline:hover { background: #0052CC; color: white; }
+  .required::after { content: ' *'; color: #c62828; }
+  .errorlist { list-style: none; padding: 0; margin: 5px 0 0 0; }
+  .errorlist li { color: #c62828; font-size: 13px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+  <div class="form-header">
+    <h1>{% if contract %}Modifier le contrat {{ contract.numero }}{% else %}Créer un nouveau contrat{% endif %}</h1>
+  </div>
+
+  <div class="form-card">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <!-- Affichage des erreurs générales du formulaire -->
+      {% if form.non_field_errors %}
+        <div style="background:#ffebee; border-left:4px solid #c62828; padding:15px; margin-bottom:20px; border-radius:6px;">
+          <strong style="color:#c62828;">Erreurs de validation:</strong>
+          <ul style="margin:5px 0 0 20px; color:#c62828;">
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      
+      <!-- Informations générales -->
+      <div class="form-section">
+        <h2><i class='bx bx-info-circle'></i> Informations générales</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Numéro du contrat</label>
+            {{ form.numero }}
+            {% if form.numero.errors %}
+              <ul class="errorlist">{% for error in form.numero.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Type</label>
+            {{ form.type }}
+            {% if form.type.errors %}
+              <ul class="errorlist">{% for error in form.type.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Objet du contrat</label>
+            {{ form.objet }}
+            {% if form.objet.errors %}
+              <ul class="errorlist">{% for error in form.objet.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type de contrat (optionnel)</label>
+            {{ form.type_contrat }}
+            <small>Description libre du type de contrat</small>
+          </div>
+          <div class="form-group">
+            <label>Type d'activité (optionnel)</label>
+            {{ form.type_activite }}
+            <small>Description libre du type d'activité</small>
+          </div>
+          <div class="form-group">
+            <label class="required">Fournisseur</label>
+            {{ form.supplier }}
+            {% if form.supplier.errors %}
+              <ul class="errorlist">{% for error in form.supplier.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Informations financières -->
+      <div class="form-section">
+        <h2><i class='bx bx-money'></i> Informations financières</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Montant</label>
+            {{ form.montant }}
+            {% if form.montant.errors %}
+              <ul class="errorlist">{% for error in form.montant.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Devise</label>
+            {{ form.devise }}
+            {% if form.devise.errors %}
+              <ul class="errorlist">{% for error in form.devise.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Dates -->
+      <div class="form-section">
+        <h2><i class='bx bx-calendar'></i> Dates importantes</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Date de signature</label>
+            {{ form.date_signature }}
+            <small>Format: JJ/MM/AAAA</small>
+            {% if form.date_signature.errors %}
+              <ul class="errorlist">{% for error in form.date_signature.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Date d'effet</label>
+            {{ form.date_effet }}
+            <small>Format: JJ/MM/AAAA</small>
+            {% if form.date_effet.errors %}
+              <ul class="errorlist">{% for error in form.date_effet.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Date d'expiration</label>
+            {{ form.date_expiry }}
+            <small>Format: JJ/MM/AAAA</small>
+            {% if form.date_expiry.errors %}
+              <ul class="errorlist">{% for error in form.date_expiry.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Préavis (jours)</label>
+            {{ form.preavis }}
+            <small>Nombre de jours avant l'échéance (défaut: 90)</small>
+          </div>
+          <div class="form-group">
+            <label>Durée du contrat (années)</label>
+            {{ form.duree_contrat }}
+            <small>Entre 1 et 5 ans</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Renouvellement -->
+      <div class="form-section">
+        <h2><i class='bx bx-refresh'></i> Renouvellement</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type de renouvellement</label>
+            {{ form.type_renouvellement }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Statut (pour modification uniquement) -->
+      {% if contract %}
+      <div class="form-section">
+        <h2><i class='bx bx-check-circle'></i> Statut</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Statut du contrat</label>
+            {{ form.status }}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class='bx bx-save'></i> {% if contract %}Enregistrer les modifications{% else %}Créer le contrat{% endif %}
+        </button>
+        <a href="{% if contract %}{% url 'contracts:detail' contract.pk %}{% else %}{% url 'contracts:list' %}{% endif %}" class="btn btn-outline">
+          <i class='bx bx-x'></i> Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
