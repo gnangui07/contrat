@@ -28,14 +28,6 @@ MANIFEST
 
 # -------- Virtual environments --------
 .dangote/
-venv/
-.venv/
-ENV/
-env/
-.env/
-.env*/
-env.bak/
-venv.bak/
 
 # -------- Django / Projet ciment --------
 # Base de données locale éventuelle
@@ -51,10 +43,6 @@ media/
 ciment/staticfiles/
 staticfiles/
 
-# Dossier static projet (généré/combiné)
-ciment/static/
-static/
-
 # Rapports générés (PDF, Excel, etc.)
 # Ajuste si tu veux versionner certains modèles
 ciment/reports/output/
@@ -68,10 +56,6 @@ logs/
 
 # -------- Config / secrets --------
 .env
-.env.local
-.env.dev
-.env.prod
-ciment/.env
 
 # -------- Tests / coverage --------
 htmlcov/
