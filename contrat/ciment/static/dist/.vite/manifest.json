@@ -1,0 +1,33 @@
+{
+  "../../node_modules/@lit-labs/virtualizer/layouts/flow.js": {
+    "file": "flow-BYK3CxBM.js",
+    "name": "flow",
+    "src": "../../node_modules/@lit-labs/virtualizer/layouts/flow.js",
+    "isDynamicEntry": true
+  },
+  "../../node_modules/focus-trap/dist/focus-trap.esm.js": {
+    "file": "focus-trap.esm-CjcqY554.js",
+    "name": "focus-trap.esm",
+    "src": "../../node_modules/focus-trap/dist/focus-trap.esm.js",
+    "isDynamicEntry": true
+  },
+  "_focus-visible-CkT6DD59.js": {
+    "file": "focus-visible-CkT6DD59.js",
+    "name": "focus-visible",
+    "isDynamicEntry": true
+  },
+  "main.js": {
+    "file": "main-DUHsmfP5.js",
+    "name": "main",
+    "src": "main.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "_focus-visible-CkT6DD59.js",
+      "../../node_modules/focus-trap/dist/focus-trap.esm.js",
+      "../../node_modules/@lit-labs/virtualizer/layouts/flow.js"
+    ],
+    "css": [
+      "main-BACOyouU.css"
+    ]
+  }
+}

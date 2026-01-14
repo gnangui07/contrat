@@ -1,0 +1,507 @@
+<!-- dashboard_index.html - Version refondue -->
+{% extends 'base_project.html' %}
+{% load static %}
+{% block title %}Dashboard - Dangote Cement{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/vendor/spectrum-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/excel-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-button.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-badge.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Message -->
+<div class="enterprise-card mb-5">
+  <div class="card-body">
+    <div class="d-flex align-items-center gap-4">
+      <div class="flex-shrink-0">
+        <div class="rounded-circle bg-primary-blue-light p-3">
+          <i class='bx bx-line-chart text-primary-blue' style="font-size: 32px;"></i>
+        </div>
+      </div>
+      <div class="flex-grow-1">
+        <h2 class="h3 mb-1">Welcome back, {{ user.get_full_name|default:user.email }}</h2>
+        <p class="text-muted mb-0">Here's an overview of your contract management system</p>
+      </div>
+      <div class="flex-shrink-0">
+        <span class="text-muted">{{ current_date|date:"F d, Y" }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if user.is_superuser %}
+<!-- Superuser Dashboard -->
+<!-- Statistics Cards -->
+<div class="row g-4 mb-5">
+  <div class="col-12 col-md-6 col-xl-3">
+    <a href="{% url 'contracts:list' %}" class="enterprise-card h-100 text-decoration-none d-block hover-shadow">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="rounded-circle bg-primary-blue-light p-2">
+            <i class='bx bx-file text-primary-blue' style="font-size: 20px;"></i>
+          </div>
+          <div class="text-end">
+            <div class="text-muted" style="font-size: 12px;">+{{ contracts_growth|default:0 }}%</div>
+          </div>
+        </div>
+        <div class="mb-1">
+          <div class="text-muted" style="font-size: 13px;">Total Contracts</div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div class="h3 mb-0">{{ total_contracts }}</div>
+          <div class="text-muted" style="font-size: 13px;">All statuses</div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <a href="{% url 'contracts:list' %}?status=pending" class="enterprise-card h-100 text-decoration-none d-block hover-shadow">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="rounded-circle bg-warning-light p-2">
+            <i class='bx bx-time text-warning' style="font-size: 20px;"></i>
+          </div>
+        </div>
+        <div class="mb-1">
+          <div class="text-muted" style="font-size: 13px;">Pending Review</div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div class="h3 mb-0">{{ pending_contracts }}</div>
+          <div class="text-muted" style="font-size: 13px;">Awaiting approval</div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <a href="{% url 'contracts:list' %}?status=active" class="enterprise-card h-100 text-decoration-none d-block hover-shadow">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="rounded-circle bg-success-light p-2">
+            <i class='bx bx-check-circle text-success' style="font-size: 20px;"></i>
+          </div>
+        </div>
+        <div class="mb-1">
+          <div class="text-muted" style="font-size: 13px;">Active Contracts</div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div class="h3 mb-0">{{ active_contracts }}</div>
+          <div class="text-muted" style="font-size: 13px;">Currently running</div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <a href="{% url 'suppliers:list' %}" class="enterprise-card h-100 text-decoration-none d-block hover-shadow">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="rounded-circle bg-info-light p-2">
+            <i class='bx bx-buildings text-info' style="font-size: 20px;"></i>
+          </div>
+        </div>
+        <div class="mb-1">
+          <div class="text-muted" style="font-size: 13px;">Suppliers</div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div class="h3 mb-0">{{ total_suppliers }}</div>
+          <div class="text-muted" style="font-size: 11px;">
+            Active: {{ compliant_suppliers }} | Inactive: {{ non_compliant_suppliers }}
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- Supplier Evaluation Stats -->
+<div class="row g-4 mb-5">
+  <div class="col-12 col-md-4">
+    <div class="enterprise-card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-warning-light p-2 mr-3">
+            <i class='bx bx-star text-warning' style="font-size: 20px;"></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 13px;">Vendor Evaluations</div>
+          </div>
+        </div>
+        <div class="h3 mb-0">{{ vendor_evaluations_count }}</div>
+        <div class="text-muted" style="font-size: 12px;">Total vendor evaluations</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="enterprise-card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-warning-light p-2 mr-3">
+            <i class='bx bx-user-check text-warning' style="font-size: 20px;"></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 13px;">Buyer Evaluations</div>
+          </div>
+        </div>
+        <div class="h3 mb-0">{{ buyer_evaluations_count }}</div>
+        <div class="text-muted" style="font-size: 12px;">Total buyer evaluations</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="enterprise-card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-success-light p-2 mr-3">
+            <i class='bx bx-line-chart text-success' style="font-size: 20px;"></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 13px;">Evaluated Suppliers</div>
+          </div>
+        </div>
+        <div class="h3 mb-0">{{ evaluated_suppliers_count }}</div>
+        <div class="text-muted" style="font-size: 12px;">With at least one evaluation</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="enterprise-card mb-5">
+  <div class="card-header">
+    <h3 class="h4 mb-0">Quick Actions</h3>
+  </div>
+  <div class="card-body">
+    <div class="row g-4">
+      <div class="col-6 col-md-3">
+        <a href="{% url 'contracts:create' %}" class="card border-0 h-100 text-center p-4 text-decoration-none hover-shadow" style="background: var(--neutral-10);">
+          <div class="mb-3">
+            <div class="rounded-circle bg-primary-blue-light p-3 d-inline-flex">
+              <i class='bx bx-plus-circle text-primary-blue' style="font-size: 32px;"></i>
+            </div>
+          </div>
+          <span class="fw-bold text-dark">New Contract</span>
+          <div class="text-muted mt-2" style="font-size: 12px;">Create a new contract</div>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="{% url 'suppliers:create' %}" class="card border-0 h-100 text-center p-4 text-decoration-none hover-shadow" style="background: var(--neutral-10);">
+          <div class="mb-3">
+            <div class="rounded-circle bg-primary-blue-light p-3 d-inline-flex">
+              <i class='bx bx-building-house text-primary-blue' style="font-size: 32px;"></i>
+            </div>
+          </div>
+          <span class="fw-bold text-dark">New Supplier</span>
+          <div class="text-muted mt-2" style="font-size: 12px;">Register new supplier</div>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="{% url 'contracts:list' %}" class="card border-0 h-100 text-center p-4 text-decoration-none hover-shadow" style="background: var(--neutral-10);">
+          <div class="mb-3">
+            <div class="rounded-circle bg-primary-blue-light p-3 d-inline-flex">
+              <i class='bx bx-list-ul text-primary-blue' style="font-size: 32px;"></i>
+            </div>
+          </div>
+          <span class="fw-bold text-dark">View Contracts</span>
+          <div class="text-muted mt-2" style="font-size: 12px;">Browse all contracts</div>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="{% url 'suppliers:list' %}" class="card border-0 h-100 text-center p-4 text-decoration-none hover-shadow" style="background: var(--neutral-10);">
+          <div class="mb-3">
+            <div class="rounded-circle bg-primary-blue-light p-3 d-inline-flex">
+              <i class='bx bx-group text-primary-blue' style="font-size: 32px;"></i>
+            </div>
+          </div>
+          <span class="fw-bold text-dark">View Suppliers</span>
+          <div class="text-muted mt-2" style="font-size: 12px;">Browse supplier directory</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pending Contracts for Approval -->
+<div class="spectrum-table-container mb-5">
+  <div class="table-header">
+    <div class="table-title">
+      <h5><i class='bx bx-time me-2'></i> Pending Contracts for Approval</h5>
+    </div>
+  </div>
+
+  {% if pending_for_validation %}
+  <div class="data-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Contract Number</th>
+          <th>Description</th>
+          <th>Supplier</th>
+          <th>Type</th>
+          <th class="text-right">Value</th>
+          <th>Created On</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for contract in pending_for_validation %}
+        <tr>
+          <td>
+            <div class="font-weight-600">
+              <a href="{% url 'contracts:detail' contract.pk %}" class="text-primary text-decoration-none">{{ contract.numero }}</a>
+            </div>
+          </td>
+          <td style="max-width: 300px;">
+            <div class="text-truncate" title="{{ contract.objet }}">{{ contract.objet }}</div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <i class='bx bx-building-house text-muted'></i>
+              <a href="{% url 'suppliers:detail' contract.supplier.pk %}" class="text-truncate text-dark text-decoration-none" style="max-width: 150px;" title="{{ contract.supplier.nom_complet_organisation }}">
+                {{ contract.supplier.nom_complet_organisation }}
+              </a>
+            </div>
+          </td>
+          <td>
+            <span class="badge bg-light text-dark border">{{ contract.get_type_display }}</span>
+          </td>
+          <td class="text-right font-weight-600">
+            {{ contract.montant|floatformat:0 }} {{ contract.devise }}
+          </td>
+          <td>{{ contract.date_creation|date:"d/m/Y H:i" }}</td>
+          <td class="text-center">
+            <a href="{% url 'contracts:detail' contract.pk %}" class="btn btn-link" title="View">
+              <i class='bx bx-show'></i>
+            </a>
+            <a href="{% url 'contracts:edit' contract.pk %}" class="btn btn-link" title="Edit">
+              <i class='bx bx-edit'></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <div class="mb-3">
+      <i class='bx bx-check-circle display-1 text-muted'></i>
+    </div>
+    <h4 class="h4 text-muted mb-2">No pending contracts</h4>
+    <p class="text-muted">All contracts have been reviewed</p>
+  </div>
+  {% endif %}
+</div>
+
+{% else %}
+<!-- Regular User Dashboard -->
+<div class="row g-4 mb-5">
+  <div class="col-12 col-md-6 col-xl-3">
+    <a href="{% url 'contracts:list' %}" class="enterprise-card h-100 text-decoration-none d-block hover-shadow">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-primary-blue-light p-2 mr-3">
+            <i class='bx bx-file text-primary-blue' style="font-size: 20px;"></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 13px;">My Contracts</div>
+          </div>
+        </div>
+        <div class="h3 mb-0">{{ my_contracts_count }}</div>
+        <div class="text-muted" style="font-size: 12px;">Total created</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <a href="{% url 'contracts:list' %}?status=pending" class="enterprise-card h-100 text-decoration-none d-block hover-shadow">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-warning-light p-2 mr-3">
+            <i class='bx bx-time text-warning' style="font-size: 20px;"></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 13px;">Pending Review</div>
+          </div>
+        </div>
+        <div class="h3 mb-0">{{ my_pending_contracts }}</div>
+        <div class="text-muted" style="font-size: 12px;">Awaiting approval</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <a href="{% url 'contracts:list' %}?status=active" class="enterprise-card h-100 text-decoration-none d-block hover-shadow">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-success-light p-2 mr-3">
+            <i class='bx bx-check-circle text-success' style="font-size: 20px;"></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 13px;">Active Contracts</div>
+          </div>
+        </div>
+        <div class="h3 mb-0">{{ my_active_contracts }}</div>
+        <div class="text-muted" style="font-size: 12px;">Currently running</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <a href="{% url 'suppliers:list' %}" class="enterprise-card h-100 text-decoration-none d-block hover-shadow">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-info-light p-2 mr-3">
+            <i class='bx bx-buildings text-info' style="font-size: 20px;"></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 13px;">My Suppliers</div>
+          </div>
+        </div>
+        <div class="h3 mb-0">{{ my_suppliers_count }}</div>
+        <div class="text-muted" style="font-size: 12px;">Managed suppliers</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="enterprise-card mb-5">
+  <div class="card-header">
+    <h3 class="h4 mb-0">Quick Actions</h3>
+  </div>
+  <div class="card-body">
+    <div class="row g-4">
+      <div class="col-6 col-md-4">
+        <a href="{% url 'contracts:create' %}" class="card border-0 h-100 text-center p-4 text-decoration-none hover-shadow" style="background: var(--neutral-10);">
+          <div class="mb-3">
+            <div class="rounded-circle bg-primary-blue-light p-3 d-inline-flex">
+              <i class='bx bx-plus-circle text-primary-blue' style="font-size: 32px;"></i>
+            </div>
+          </div>
+          <span class="fw-bold text-dark">New Contract</span>
+          <div class="text-muted mt-2" style="font-size: 12px;">Create a new contract</div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4">
+        <a href="{% url 'suppliers:create' %}" class="card border-0 h-100 text-center p-4 text-decoration-none hover-shadow" style="background: var(--neutral-10);">
+          <div class="mb-3">
+            <div class="rounded-circle bg-primary-blue-light p-3 d-inline-flex">
+              <i class='bx bx-building-house text-primary-blue' style="font-size: 32px;"></i>
+            </div>
+          </div>
+          <span class="fw-bold text-dark">New Supplier</span>
+          <div class="text-muted mt-2" style="font-size: 12px;">Register new supplier</div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4">
+        <a href="{% url 'contracts:list' %}" class="card border-0 h-100 text-center p-4 text-decoration-none hover-shadow" style="background: var(--neutral-10);">
+          <div class="mb-3">
+            <div class="rounded-circle bg-primary-blue-light p-3 d-inline-flex">
+              <i class='bx bx-list-ul text-primary-blue' style="font-size: 32px;"></i>
+            </div>
+          </div>
+          <span class="fw-bold text-dark">My Contracts</span>
+          <div class="text-muted mt-2" style="font-size: 12px;">Browse my contracts</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- My Recent Contracts -->
+<div class="spectrum-table-container">
+  <div class="table-header">
+    <div class="table-title">
+      <h5><i class='bx bx-file me-2'></i> My Recent Contracts</h5>
+    </div>
+  </div>
+
+  {% if my_contracts %}
+  <div class="data-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Contract Number</th>
+          <th>Description</th>
+          <th>Supplier</th>
+          <th>Type</th>
+          <th class="text-right">Value</th>
+          <th>Status</th>
+          <th>Created On</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for contract in my_contracts %}
+        <tr>
+          <td>
+            <div class="font-weight-600">
+              <a href="{% url 'contracts:detail' contract.pk %}" class="text-primary text-decoration-none">{{ contract.numero }}</a>
+            </div>
+          </td>
+          <td style="max-width: 300px;">
+            <div class="text-truncate" title="{{ contract.objet }}">{{ contract.objet }}</div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <i class='bx bx-building-house text-muted'></i>
+              <a href="{% url 'suppliers:detail' contract.supplier.pk %}" class="text-truncate text-dark text-decoration-none" style="max-width: 150px;" title="{{ contract.supplier.nom_complet_organisation }}">
+                {{ contract.supplier.nom_complet_organisation }}
+              </a>
+            </div>
+          </td>
+          <td>
+            <span class="badge bg-light text-dark border">{{ contract.get_type_display }}</span>
+          </td>
+          <td class="text-right font-weight-600">
+            {{ contract.montant|floatformat:0 }} {{ contract.devise }}
+          </td>
+          <td>
+            {% if contract.status == 'pending' %}
+            <span class="status-badge status-pending">Pending</span>
+            {% elif contract.status == 'active' %}
+            <span class="status-badge status-active">Active</span>
+            {% elif contract.status == 'expired' %}
+            <span class="status-badge status-expired">Expired</span>
+            {% elif contract.status == 'rejected' %}
+            <span class="status-badge status-rejected">Rejected</span>
+            {% else %}
+            <span class="status-badge status-suspended">Suspended</span>
+            {% endif %}
+          </td>
+          <td>{{ contract.date_creation|date:"d/m/Y" }}</td>
+          <td class="text-center">
+            <a href="{% url 'contracts:detail' contract.pk %}" class="btn btn-link" title="View">
+              <i class='bx bx-show'></i>
+            </a>
+            <a href="{% url 'contracts:edit' contract.pk %}" class="btn btn-link" title="Edit">
+              <i class='bx bx-edit'></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <div class="mb-3">
+      <i class='bx bx-file-blank display-1 text-muted'></i>
+    </div>
+    <h4 class="h4 text-muted mb-2">No contracts yet</h4>
+    <p class="text-muted">Create your first contract to get started</p>
+    <a href="{% url 'contracts:create' %}" class="btn btn-primary mt-3">
+      <i class='bx bx-plus'></i> Create Contract
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

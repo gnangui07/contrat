@@ -1,0 +1,149 @@
+<!-- contract_list.html - Version refondue -->
+{% extends 'base_project.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link href="{% static 'css/vendor/spectrum-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/excel-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-button.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-badge.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block title %}Contracts - List{% endblock %}
+{% block page_title %}Contracts{% endblock %}
+
+{% block page_actions %}
+<div class="action-group">
+  <a href="{% url 'contracts:create' %}" class="btn btn-primary">
+    <i class='bx bx-plus'></i> New Contract
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="enterprise-card mb-4">
+  <div class="card-body">
+    <h3 class="h4 mb-3">Filter Contracts</h3>
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label mb-1">Status</label>
+        <select name="status" class="form-control" onchange="this.form.submit()">
+          <option value="">All Statuses</option>
+          <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+          <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+          <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+          <option value="suspended" {% if request.GET.status == 'suspended' %}selected{% endif %}>Suspended</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-1">Type</label>
+        <select name="type" class="form-control" onchange="this.form.submit()">
+          <option value="">All Types</option>
+          <option value="capex" {% if request.GET.type == 'capex' %}selected{% endif %}>CAPEX</option>
+          <option value="opex" {% if request.GET.type == 'opex' %}selected{% endif %}>OPEX</option>
+          <option value="service" {% if request.GET.type == 'service' %}selected{% endif %}>Service</option>
+          <option value="travaux" {% if request.GET.type == 'travaux' %}selected{% endif %}>Works</option>
+          <option value="it" {% if request.GET.type == 'it' %}selected{% endif %}>IT</option>
+        </select>
+      </div>
+      <div class="col-md-6 d-flex justify-content-end">
+        {% if request.GET.status or request.GET.type %}
+        <a href="{% url 'contracts:list' %}" class="btn btn-outline">
+          <i class='bx bx-reset'></i> Clear Filters
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Contracts Table -->
+<div class="spectrum-table-container">
+  <div class="table-header">
+    <div class="table-title">
+      <h5><i class='bx bx-file me-2'></i> Contract Records</h5>
+      <span class="table-subtitle">{{ contracts|length }} contract{{ contracts|length|pluralize }}</span>
+    </div>
+  </div>
+  
+  {% if contracts %}
+  <div class="data-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Contract Number</th>
+          <th>Description</th>
+          <th>Supplier</th>
+          <th>Type</th>
+          <th class="text-right">Value</th>
+          <th>Effective Date</th>
+          <th>Expiry Date</th>
+          <th>Status</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for contract in contracts %}
+        <tr>
+          <td>
+            <div class="font-weight-600">{{ contract.numero }}</div>
+          </td>
+          <td style="max-width: 300px;">
+            <div class="text-truncate" title="{{ contract.objet }}">{{ contract.objet }}</div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <i class='bx bx-buildings text-muted'></i>
+              <span class="text-truncate" style="max-width: 150px;" title="{{ contract.supplier.nom_complet_organisation }}">
+                {{ contract.supplier.nom_complet_organisation }}
+              </span>
+            </div>
+          </td>
+          <td>
+            <span class="badge bg-light text-dark border">{{ contract.get_type_display }}</span>
+          </td>
+          <td class="text-right font-weight-600">
+            {{ contract.montant|floatformat:0 }} {{ contract.devise }}
+          </td>
+          <td>{{ contract.date_effet|date:"d/m/Y" }}</td>
+          <td>{{ contract.date_expiry|date:"d/m/Y" }}</td>
+          <td>
+            {% if contract.status == 'pending' %}
+            <span class="status-badge status-pending">Pending</span>
+            {% elif contract.status == 'active' %}
+            <span class="status-badge status-active">Active</span>
+            {% elif contract.status == 'expired' %}
+            <span class="status-badge status-expired">Expired</span>
+            {% elif contract.status == 'rejected' %}
+            <span class="status-badge status-rejected">Rejected</span>
+            {% else %}
+            <span class="status-badge status-suspended">Suspended</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <a href="{% url 'contracts:detail' contract.pk %}" class="btn btn-link" title="View Details">
+              <i class='bx bx-show'></i>
+            </a>
+            <a href="{% url 'contracts:edit' contract.pk %}" class="btn btn-link" title="Edit">
+              <i class='bx bx-edit'></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class='bx bx-file-blank display-1 text-muted mb-4'></i>
+    <h3 class="h4 text-muted mb-3">No Contracts Found</h3>
+    <p class="text-muted mb-4">Get started by creating your first contract.</p>
+    <a href="{% url 'contracts:create' %}" class="btn btn-primary">
+      <i class='bx bx-plus'></i> Create Contract
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

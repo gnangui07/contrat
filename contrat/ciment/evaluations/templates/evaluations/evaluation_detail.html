@@ -1,0 +1,289 @@
+<!-- evaluation_detail.html - Version refondue -->
+{% extends 'base_project.html' %}
+{% load static %}
+{% block title %}Evaluation - {{ evaluation.supplier.nom_complet_organisation }}{% endblock %}
+{% block page_title %}Vendor Evaluation Details{% endblock %}
+
+{% block page_actions %}
+<div class="action-group">
+  <a href="{% url 'evaluations:edit' evaluation.pk %}" class="btn btn-secondary">
+    <i class='bx bx-edit'></i> Edit
+  </a>
+  <a href="{% url 'evaluations:list' %}" class="btn btn-outline">
+    <i class='bx bx-arrow-back'></i> Back
+  </a>
+  <button class="btn btn-danger delete-evaluation-btn" 
+          data-evaluation-id="{{ evaluation.pk }}" 
+          data-supplier-name="{{ evaluation.supplier.nom_complet_organisation }}">
+    <i class='bx bx-trash'></i> Delete
+  </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Evaluation Header -->
+<div class="enterprise-card mb-5">
+  <div class="card-header">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <h2 class="h2 mb-1">Vendor Evaluation</h2>
+        <p class="text-muted mb-0">{{ evaluation.supplier.nom_complet_organisation }}</p>
+      </div>
+      <div>
+        {% with badge=evaluation.get_rating_badge %}
+        <span class="status-badge status-{{ badge.class }}">{{ badge.label }}</span>
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <!-- Evaluation Metadata -->
+    <div class="row mb-5">
+      <div class="col-md-6">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="rounded-circle bg-light p-2">
+            <i class='bx bx-calendar text-muted'></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 12px;">Evaluation Date</div>
+            <div class="font-weight-600">{{ evaluation.date_evaluation|date:"F d, Y H:i" }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="rounded-circle bg-light p-2">
+            <i class='bx bx-user text-muted'></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 12px;">Evaluator</div>
+            <div class="font-weight-600">{{ evaluation.evaluator.get_full_name|default:evaluation.evaluator.email }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final Score -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="text-center p-5 border rounded" style="background: var(--neutral-10);">
+          <div class="display-1 fw-bold text-primary mb-2">{{ evaluation.vendor_final_rating }}/10</div>
+          <div class="h4 text-muted mb-3">Final Vendor Rating</div>
+          <div class="text-muted">Total Score: {{ evaluation.get_total_score }}/50</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Criteria Breakdown -->
+    <h3 class="h4 mb-4">Evaluation Criteria</h3>
+    <div class="row g-4 mb-5">
+      <div class="col-md-6 col-lg-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">Delivery Compliance</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.delivery_compliance }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.delivery_compliance }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">Delivery Timeline</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.delivery_timeline }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.delivery_timeline }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">Advising Capability</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.advising_capability }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.advising_capability }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-6">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">After Sales Quality of Service</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.after_sales_qos }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.after_sales_qos }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-6">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">Vendor Relationship</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.vendor_relationship }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.vendor_relationship }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    {% if evaluation.comments %}
+    <div class="enterprise-card mb-5">
+      <div class="card-header">
+        <h3 class="h4 mb-0">Comments</h3>
+      </div>
+      <div class="card-body">
+        <p class="mb-0" style="white-space: pre-wrap;">{{ evaluation.comments }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Additional Information -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-6">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h3 class="h4 mb-0">Supplier Information</h3>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Supplier</span>
+              <a href="{% url 'suppliers:detail' evaluation.supplier.pk %}" class="text-primary font-weight-500">
+                {{ evaluation.supplier.nom_complet_organisation }}
+              </a>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Evaluation Date</span>
+              <span>{{ evaluation.date_evaluation|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Last Modified</span>
+              <span>{{ evaluation.date_modification|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Evaluator</span>
+              <span>{{ evaluation.evaluator.email|default:"N/A" }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other Evaluations of this Supplier -->
+      <div class="col-md-6">
+        {% if supplier_evaluations %}
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h3 class="h4 mb-0">Other Vendor Evaluations</h3>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="grid-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Final Rating</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for eval in supplier_evaluations %}
+                  <tr>
+                    <td>{{ eval.date_evaluation|date:"d/m/Y" }}</td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="font-weight-600 text-primary">{{ eval.vendor_final_rating }}/10</span>
+                        {% with badge=eval.get_rating_badge %}
+                        <span class="status-badge status-{{ badge.class }}">{{ badge.label }}</span>
+                        {% endwith %}
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <a href="{% url 'evaluations:detail' eval.pk %}" class="btn btn-link">
+                        <i class='bx bx-show'></i>
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Delete evaluation confirmation
+  document.querySelectorAll('.delete-evaluation-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const evaluationId = this.dataset.evaluationId;
+      const supplierName = this.dataset.supplierName;
+      
+      Swal.fire({
+        title: 'Confirm Deletion',
+        html: `Are you sure you want to delete the vendor evaluation for <strong>${supplierName}</strong>?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        customClass: {
+          container: 'swal2-container-enterprise'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = `/evaluations/${evaluationId}/delete/`;
+          
+          const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+          if (csrfToken) {
+            const csrfInput = csrfToken.cloneNode(true);
+            csrfInput.style.display = 'none';
+            form.appendChild(csrfInput);
+          } else {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+          }
+          
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

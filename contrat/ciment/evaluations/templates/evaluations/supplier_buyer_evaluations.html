@@ -1,0 +1,79 @@
+{% extends 'base_project.html' %}
+{% load static %}
+{% block title %}Évaluations Acheteur - {{ supplier.nom_complet_organisation }}{% endblock %}
+{% block extra_css %}
+<link href="{% static 'css/excel-table.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div style="padding:20px;">
+  <div class="page-header">
+    <h1><i class='bx bx-shopping-bag'></i> Évaluations Acheteur — {{ supplier.nom_complet_organisation }}</h1>
+    <a href="{% url 'evaluations:buyer_create' %}?supplier={{ supplier.id }}" class="btn btn-primary">
+      <i class='bx bx-plus'></i> Nouvelle évaluation
+    </a>
+  </div>
+
+  <div class="mini-counter">
+    <i class='bx bx-bar-chart-alt-2'></i>
+    <span>{{ stats.total }} évaluations • Moyenne {{ stats.avg_rating|floatformat:2 }}/10</span>
+  </div>
+
+  {% if evaluations %}
+  <div class="spectrum-table-container">
+    <div class="table-header">
+      <div class="table-title">
+        <h5><i class='bx bx-shopping-bag me-2'></i>Évaluations Acheteur — {{ supplier.nom_complet_organisation }}</h5>
+        <span class="table-subtitle">{{ stats.total }} évaluations • Moyenne {{ stats.avg_rating|floatformat:2 }}/10</span>
+      </div>
+    </div>
+    <div class="data-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 40px"><input type="checkbox" id="select-all-rows"></th>
+            <th>Date</th>
+            <th>Note</th>
+            <th>Prix</th>
+            <th>Délais RFX</th>
+            <th>Conseil</th>
+            <th>Relation</th>
+            <th>Qualité RFX</th>
+            <th>Crédit</th>
+            <th>Évaluateur</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in evaluations %}
+          <tr>
+            <td><input type="checkbox" class="row-checkbox"></td>
+            <td>{{ e.date_evaluation|date:"d/m/Y" }}</td>
+            <td>
+              <strong>{{ e.buyer_final_rating }}/10</strong>
+              {% with badge=e.get_rating_badge %}
+              <span class="badge badge-{{ badge.class }}">{{ badge.label }}</span>
+              {% endwith %}
+            </td>
+            <td>{{ e.price_flexibility }}</td>
+            <td>{{ e.rfx_deadline_compliance }}</td>
+            <td>{{ e.advisory_capability }}</td>
+            <td>{{ e.relationship_quality }}</td>
+            <td>{{ e.rfx_response_quality }}</td>
+            <td>{{ e.credit_policy }}</td>
+            <td>{{ e.evaluator.email|default:"N/A" }}</td>
+            <td class="actions">
+              <a href="{% url 'evaluations:buyer_detail' e.pk %}" class="btn btn-outline"><i class='bx bx-show'></i></a>
+              <a href="{% url 'evaluations:buyer_edit' e.pk %}" class="btn btn-outline"><i class='bx bx-edit'></i></a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <p style="text-align:center; color:#999;">Aucune évaluation pour ce fournisseur.</p>
+  {% endif %}
+</div>
+{% endblock %}

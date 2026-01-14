@@ -1,0 +1,14 @@
+{% extends 'base_project.html' %}
+{% block title %}Rapports - Liste{% endblock %}
+{% block content %}
+<h1>Liste des rapports</h1>
+{% if reports %}
+  <ul>
+    {% for report in reports %}
+      <li>{{ report.title }} - {{ report.date_creation }}</li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>Aucun rapport pour le moment.</p>
+{% endif %}
+{% endblock %}

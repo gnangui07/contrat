@@ -1,0 +1,528 @@
+{% extends 'base_project.html' %}
+{% load static %}
+{% block title %}Supplier Ranking{% endblock %}
+{% block extra_css %}
+<link href="{% static 'css/vendor/spectrum-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/excel-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-button.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-badge.css' %}" rel="stylesheet" />
+<style>
+  .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .page-header h1 { font-size:26px; color:#333; margin:0; }
+  .btn { padding:10px 16px; border-radius:6px; border:1px solid transparent; cursor:pointer; font-weight:600; text-decoration:none; display:inline-block; }
+  .btn-primary { background:#000; color:#FFCC00; border-color:#FFCC00; }
+  .btn-outline { background:#fff; color:#000; border:1px solid #000; }
+  .mini-stat { display:flex; align-items:center; justify-content:center; gap:10px; width:max-content; margin: 0 auto 24px auto; padding:10px 20px; border:1px solid #000; border-radius:999px; background:#fff; color:#000; font-weight:700; font-size:15px; }
+  .card { background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08); margin-bottom:24px; }
+  .card-body { padding:24px; }
+  .card-title { font-size:18px; font-weight:700; color:#333; margin:0 0 20px 0; display:flex; align-items:center; gap:8px; }
+  .section-divider { height:2px; background:linear-gradient(90deg, #0052CC, #FFCC00); margin:40px 0; border-radius:2px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; }
+  .grid-2 { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:24px; justify-content:center; align-items:start; }
+  .grid-3 { display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; }
+  .section-wrap { width:100%; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+  @media (max-width: 1400px) { .grid-2 { grid-template-columns: 1fr; } }
+  @media (max-width: 1200px) { .grid-3 { grid-template-columns: 1fr; } }
+  .table { width:100%; border-collapse: collapse; }
+  .table th, .table td { padding:10px 12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
+  .table thead th { background:#f7f9fc; color:#333; font-weight:600; }
+  .rank-badge { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#FFCC00; color:#000; font-weight:700; border:2px solid #000; }
+  .kpi { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap:12px; margin:12px 0 8px 0; }
+  .kpi-item { background:#fff; border:1px solid #eee; border-radius:8px; padding:12px; text-align:center; }
+  .kpi-item .label { font-size:12px; color:#666; text-transform:uppercase; }
+  .kpi-item .value { font-size:18px; font-weight:700; color:#000; }
+  .progress { height:10px; background:#eee; border-radius:999px; overflow:hidden; border:1px solid #e5eaf2; }
+  .progress-bar { height:100%; background: linear-gradient(90deg, #FFCC00, #FFD700); transition: width .8s ease; }
+  /* Ensure the Average trend canvas fills its card */
+  #avgTrendChart { width: 100% !important; height: 100% !important; display:block; }
+</style>
+{% endblock %}
+{% block content %}
+<div style="padding:20px;">
+  <div class="page-header">
+    <h1><i class='bx bx-line-chart'></i> Supplier Ranking</h1>
+    <div>
+      <a href="{% url 'evaluations:export_ranking_xlsx' %}?supplier={{ selected_supplier_id }}&yearly=1" class="btn btn-primary" style="margin-right:8px;">
+        <i class='bx bx-export'></i> Export
+      </a>
+      <a href="{% url 'evaluations:list' %}" class="btn btn-outline"><i class='bx bx-list-ul'></i> Évaluations</a>
+    </div>
+  </div>
+
+  <!-- Total suppliers evaluated -->
+  <div class="mini-stat">
+    <i class='bx bx-trophy'></i> <span>{{ total_suppliers }} suppliers evaluated</span>
+  </div>
+
+  <!-- Supplier selector -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-body">
+      <form method="get" class="" id="supplierForm" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <label for="supplier" style="font-weight:600; color:#333;">Select supplier</label>
+        <select name="supplier" id="supplier" style="min-width:320px;">
+          <option value="">-- Choose a supplier --</option>
+          {% for s in suppliers_stats %}
+          <option value="{{ s.id }}" {% if selected_supplier_id and s.id == selected_supplier_id %}selected{% endif %}>
+            {{ s.nom_complet_organisation }} — {{ s.weighted_rating|floatformat:2 }}/10 (V:{{ s.vendor_eval_count }} + B:{{ s.buyer_eval_count }})
+          </option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+  </div>
+
+  {% if selected_supplier_data %}
+  <!-- SECTION 2: VUE D'ENSEMBLE DU FOURNISSEUR -->
+  <div class="section-divider"></div>
+  <div class="section-wrap">
+  <h2 style="font-size:24px; font-weight:700; color:#333; margin:0 0 24px 0; text-align:center;">
+    <i class='bx bx-building'></i> Analyse Détaillée: {{ selected_supplier_data.name }}
+  </h2>
+
+  <!-- KPIs Globaux -->
+  <div class="grid-3" style="margin-bottom:24px;">
+    <div class="card" style="background:linear-gradient(135deg, #0052CC, #003D99); color:white;">
+      <div class="card-body" style="text-align:center;">
+        <div style="font-size:14px; opacity:0.9; margin-bottom:8px;">Note Globale Pondérée</div>
+        <div style="font-size:42px; font-weight:700;">{{ selected_supplier_data.weighted_rating|floatformat:2 }}<span style="font-size:24px;">/10</span></div>
+        <div style="font-size:13px; opacity:0.8; margin-top:8px;">Rang #{{ selected_supplier_data.rank }}</div>
+      </div>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg, #4caf50, #2e7d32); color:white;">
+      <div class="card-body" style="text-align:center;">
+        <div style="font-size:14px; opacity:0.9; margin-bottom:8px;">Note Vendor (60%)</div>
+        <div style="font-size:42px; font-weight:700;">{{ selected_supplier_data.avg_vendor_rating|floatformat:2 }}<span style="font-size:24px;">/10</span></div>
+        <div style="font-size:13px; opacity:0.8; margin-top:8px;">{{ selected_supplier_data.vendor_eval_count }} évaluations</div>
+      </div>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg, #FF5722, #E64A19); color:white;">
+      <div class="card-body" style="text-align:center;">
+        <div style="font-size:14px; opacity:0.9; margin-bottom:8px;">Note Buyer (40%)</div>
+        <div style="font-size:42px; font-weight:700;">{{ selected_supplier_data.avg_buyer_rating|floatformat:2 }}<span style="font-size:24px;">/10</span></div>
+        <div style="font-size:13px; opacity:0.8; margin-top:8px;">{{ selected_supplier_data.buyer_eval_count }} évaluations</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Détails des Critères -->
+  <div class="card">
+    <div class="card-body">
+  <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
+    <tbody>
+      <tr>
+        <td colspan="2" style="background-color:#e3f2fd; padding:10px; font-weight:bold; color:#0052CC;"><i class='bx bx-package'></i> Critères Vendor</td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">Delivery Compliance</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_delivery_compliance|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_delivery_compliance|default:0 }}" style="height:8px; background:#4caf50; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">Timeline</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_delivery_timeline|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_delivery_timeline|default:0 }}" style="height:8px; background:#2196f3; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">Advising</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_advising_capability|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_advising_capability|default:0 }}" style="height:8px; background:#ff9800; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">After Sales</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_after_sales_qos|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_after_sales_qos|default:0 }}" style="height:8px; background:#9c27b0; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">Relationship</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_vendor_relationship|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_vendor_relationship|default:0 }}" style="height:8px; background:#f44336; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" style="background-color:#fff3e0; padding:10px; font-weight:bold; color:#FF5722;"><i class='bx bx-shopping-bag'></i> Critères Acheteur</td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">Flexibilité Prix</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_price_flexibility|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_price_flexibility|default:0 }}" style="height:8px; background:#FF5722; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">Délais RFX</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_rfx_deadline_compliance|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_rfx_deadline_compliance|default:0 }}" style="height:8px; background:#FF6F00; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">Conseil Acheteur</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_buyer_advisory_capability|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_buyer_advisory_capability|default:0 }}" style="height:8px; background:#FF8A65; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">Qualité Relation</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_relationship_quality|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_relationship_quality|default:0 }}" style="height:8px; background:#FFAB91; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #eee;">Qualité RFX</td>
+        <td style="padding:8px; border-bottom:1px solid #eee;">
+          {{ selected_supplier_data.avg_rfx_response_quality|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_rfx_response_quality|default:0 }}" style="height:8px; background:#FFCCBC; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px;">Politique Crédit</td>
+        <td style="padding:8px;">
+          {{ selected_supplier_data.avg_credit_policy|floatformat:2 }}/10
+          <div class="progress" style="height:8px; background:#eee; border-radius:4px; margin-top:4px;">
+            <div class="progress-bar" data-value="{{ selected_supplier_data.avg_credit_policy|default:0 }}" style="height:8px; background:#FF5252; border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if yearly_stats_list %}
+  <!-- SECTION 3: ANALYSES TEMPORELLES -->
+  <div class="section-divider"></div>
+  <div class="section-wrap">
+  <h2 style="font-size:24px; font-weight:700; color:#333; margin:0 0 24px 0; text-align:center;">
+    <i class='bx bx-trending-up'></i> Analyses Temporelles
+  </h2>
+  
+  <!-- Average Trend (Large) -->
+  <div class="card">
+    <div class="card-body" style="height:320px;">
+      <h3 class="card-title" style="color:#0052CC;"><i class='bx bx-line-chart'></i> Évolution de la Moyenne Pondérée</h3>
+      <div style="position:relative; height: calc(100% - 44px);">
+        <canvas id="avgTrendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Vendor: Chart + Table -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-body">
+        <h3 class="card-title" style="color:#0052CC;"><i class='bx bx-bar-chart-alt-2'></i> Performance Vendor (Graphique)</h3>
+        <canvas id="yearlyChart" height="240"></canvas>
+      </div>
+    </div>
+    <div class="spectrum-table-container" style="height: 100%;">
+      <div class="table-header">
+        <div class="table-title">
+          <h5 style="color:#0052CC;"><i class='bx bx-table me-2'></i> Performance Vendor (Tableau)</h5>
+        </div>
+      </div>
+      <div class="data-container">
+        <table class="data-table" style="font-size:13px;">
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              {% for y in yearly_stats_list %}<th class="text-center">{{ y.year }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Delivery Compliance</strong></td>{% for y in yearly_stats_list %}<td class="text-center">{{ y.avg_delivery_compliance|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong>Timeline</strong></td>{% for y in yearly_stats_list %}<td class="text-center">{{ y.avg_delivery_timeline|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong>Advising</strong></td>{% for y in yearly_stats_list %}<td class="text-center">{{ y.avg_advising_capability|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong>After Sales</strong></td>{% for y in yearly_stats_list %}<td class="text-center">{{ y.avg_after_sales_qos|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong>Relationship</strong></td>{% for y in yearly_stats_list %}<td class="text-center">{{ y.avg_vendor_relationship|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr style="background:#f7f9fc;"><td><strong>Average Rating</strong></td>{% for y in yearly_stats_list %}<td class="text-center">{{ y.avg_final_rating|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong># Evaluations</strong></td>{% for y in yearly_stats_list %}<td class="text-center">{{ y.num_evaluations }}</td>{% endfor %}</tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% if yearly_buyer_stats_list %}
+  <!-- Performance Buyer: Chart + Table -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-body">
+        <h3 class="card-title" style="color:#FF5722;"><i class='bx bx-bar-chart-alt-2'></i> Performance Buyer (Graphique)</h3>
+        <canvas id="yearlyBuyerChart" height="240"></canvas>
+      </div>
+    </div>
+    <div class="spectrum-table-container" style="height: 100%;">
+      <div class="table-header">
+        <div class="table-title">
+          <h5 style="color:#FF5722;"><i class='bx bx-table me-2'></i> Performance Buyer (Tableau)</h5>
+        </div>
+      </div>
+      <div class="data-container">
+        <table class="data-table" style="font-size:13px;">
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              {% for y in yearly_buyer_stats_list %}<th class="text-center">{{ y.year }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Flexibilité Prix</strong></td>{% for y in yearly_buyer_stats_list %}<td class="text-center">{{ y.avg_price_flexibility|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong>Délais RFX</strong></td>{% for y in yearly_buyer_stats_list %}<td class="text-center">{{ y.avg_rfx_deadline_compliance|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong>Conseil</strong></td>{% for y in yearly_buyer_stats_list %}<td class="text-center">{{ y.avg_advisory_capability|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong>Relation</strong></td>{% for y in yearly_buyer_stats_list %}<td class="text-center">{{ y.avg_relationship_quality|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong>Qualité RFX</strong></td>{% for y in yearly_buyer_stats_list %}<td class="text-center">{{ y.avg_rfx_response_quality|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong>Politique Crédit</strong></td>{% for y in yearly_buyer_stats_list %}<td class="text-center">{{ y.avg_credit_policy|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr style="background:#fff3e0;"><td><strong>Average Rating</strong></td>{% for y in yearly_buyer_stats_list %}<td class="text-center">{{ y.avg_final_rating|floatformat:2 }}/10</td>{% endfor %}</tr>
+            <tr><td><strong># Evaluations</strong></td>{% for y in yearly_buyer_stats_list %}<td class="text-center">{{ y.num_evaluations }}</td>{% endfor %}</tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+  {% endif %}
+  </div>
+
+  <!-- SECTION 4: CLASSEMENT GLOBAL -->
+  <div class="section-divider"></div>
+  <div class="section-wrap">
+    <h2 style="font-size:24px; font-weight:700; color:#333; margin:0 0 24px 0; text-align:center;">
+      <i class='bx bx-trophy'></i> Classement Global
+    </h2>
+    
+    <div class="grid-2">
+    <div class="spectrum-table-container" style="height: 100%;">
+      <div class="table-header">
+        <div class="table-title">
+          <h5 style="color:#2e7d32;"><i class='bx bx-trophy me-2'></i> Top 10 Meilleurs Fournisseurs</h5>
+        </div>
+      </div>
+      <div class="data-container">
+        <table class="data-table">
+            <thead><tr><th>#</th><th>Supplier</th><th>Weighted</th><th>#Evals (V+B)</th></tr></thead>
+          <tbody>
+            {% for s in top10 %}
+            <tr>
+              <td><span class="rank-badge">{{ s.rank }}</span></td>
+              <td>{{ s.nom_complet_organisation }}</td>
+              <td>{{ s.weighted_rating|floatformat:2 }}/10</td>
+              <td>{{ s.vendor_eval_count }} + {{ s.buyer_eval_count }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="color:#888;">Aucune donnée</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="spectrum-table-container" style="height: 100%;">
+      <div class="table-header">
+        <div class="table-title">
+          <h5 style="color:#c62828;"><i class='bx bx-error me-2'></i> Top 10 À Améliorer</h5>
+        </div>
+      </div>
+      <div class="data-container">
+        <table class="data-table">
+            <thead><tr><th>#</th><th>Supplier</th><th>Weighted</th><th>#Evals (V+B)</th></tr></thead>
+          <tbody>
+            {% for s in bottom10 %}
+            <tr>
+              <td><span class="rank-badge" style="background:#ffebee; color:#c62828;">{{ forloop.counter }}</span></td>
+              <td>{{ s.nom_complet_organisation }}</td>
+              <td>{{ s.weighted_rating|floatformat:2 }}/10</td>
+              <td>{{ s.vendor_eval_count }} + {{ s.buyer_eval_count }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="color:#888;">Aucune donnée</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Data blocks to avoid lint errors -->
+{% if yearly_stats_json %}
+{{ yearly_stats_json|json_script:"yearly-stats-data" }}
+{% endif %}
+{% if yearly_buyer_stats_json %}
+{{ yearly_buyer_stats_json|json_script:"yearly-buyer-stats-data" }}
+{% endif %}
+{% if yearly_weighted_json %}
+{{ yearly_weighted_json|json_script:"yearly-weighted-data" }}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  const el = document.getElementById('yearly-stats-data');
+  if (!el) return;
+  const yearly = JSON.parse(el.textContent);
+  const years = yearly.map(d => d.year);
+  const ds = {
+    delivery: yearly.map(d => d.avg_delivery_compliance),
+    timeline: yearly.map(d => d.avg_delivery_timeline),
+    advising: yearly.map(d => d.avg_advising_capability),
+    aftersales: yearly.map(d => d.avg_after_sales_qos),
+    relation: yearly.map(d => d.avg_vendor_relationship),
+  };
+  const ctx = document.getElementById('yearlyChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: years,
+      datasets: [
+        { label: 'Delivery', data: ds.delivery, backgroundColor: 'rgba(255, 204, 0, 0.8)', borderColor: '#FFCC00', borderWidth: 1 },
+        { label: 'Timeline', data: ds.timeline, backgroundColor: 'rgba(0, 0, 0, 0.8)', borderColor: '#000', borderWidth: 1 },
+        { label: 'Advising', data: ds.advising, backgroundColor: 'rgba(255, 153, 0, 0.8)', borderColor: '#FF9900', borderWidth: 1 },
+        { label: 'After Sales', data: ds.aftersales, backgroundColor: 'rgba(102, 102, 102, 0.8)', borderColor: '#666', borderWidth: 1 },
+        { label: 'Relationship', data: ds.relation, backgroundColor: 'rgba(204, 153, 0, 0.8)', borderColor: '#CC9900', borderWidth: 1 },
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true, max: 10 }
+      },
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+  // Small average trend line chart
+  const ctxAvg = document.getElementById('avgTrendChart');
+  if (ctxAvg) {
+    const wEl = document.getElementById('yearly-weighted-data');
+    if (wEl) {
+      const weighted = JSON.parse(wEl.textContent);
+      const wYears = weighted.map(d => d.year);
+      const wValues = weighted.map(d => d.weighted_avg);
+      new Chart(ctxAvg, {
+        type: 'line',
+        data: {
+          labels: wYears,
+          datasets: [{
+            label: 'Weighted Avg',
+            data: wValues,
+            borderColor: '#000',
+            backgroundColor: 'rgba(255,204,0,0.25)',
+            pointBackgroundColor: '#FFCC00',
+            pointBorderColor: '#000',
+            borderWidth: 2,
+            pointRadius: 3,
+            tension: 0.25,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true, max: 10 }, x: { grid: { display: false } } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+  }
+})();
+</script>
+<script>
+(function(){
+  const bars = document.querySelectorAll('.progress-bar[data-value]');
+  bars.forEach(function(bar){
+    const v = parseFloat(bar.getAttribute('data-value') || '0');
+    const pct = Math.max(0, Math.min(10, isNaN(v) ? 0 : v)) * 10; // clamp 0..10 -> 0..100
+    bar.style.width = pct + '%';
+  });
+})();
+</script>
+<script>
+(function(){
+  const el = document.getElementById('yearly-buyer-stats-data');
+  const ctx = document.getElementById('yearlyBuyerChart');
+  if (!el || !ctx) return;
+  const yearly = JSON.parse(el.textContent);
+  const years = yearly.map(d => d.year);
+  const ds = {
+    price: yearly.map(d => d.avg_price_flexibility),
+    rfx: yearly.map(d => d.avg_rfx_deadline_compliance),
+    advisory: yearly.map(d => d.avg_advisory_capability),
+    relation: yearly.map(d => d.avg_relationship_quality),
+    rfx_quality: yearly.map(d => d.avg_rfx_response_quality),
+    credit: yearly.map(d => d.avg_credit_policy),
+  };
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: years,
+      datasets: [
+        { label: 'Prix', data: ds.price, backgroundColor: 'rgba(255, 87, 34, 0.8)', borderColor: '#FF5722', borderWidth: 1 },
+        { label: 'Délais RFX', data: ds.rfx, backgroundColor: 'rgba(255, 111, 0, 0.8)', borderColor: '#FF6F00', borderWidth: 1 },
+        { label: 'Conseil', data: ds.advisory, backgroundColor: 'rgba(255, 138, 101, 0.8)', borderColor: '#FF8A65', borderWidth: 1 },
+        { label: 'Relation', data: ds.relation, backgroundColor: 'rgba(255, 171, 145, 0.8)', borderColor: '#FFAB91', borderWidth: 1 },
+        { label: 'Qualité RFX', data: ds.rfx_quality, backgroundColor: 'rgba(255, 204, 188, 0.8)', borderColor: '#FFCCBC', borderWidth: 1 },
+        { label: 'Crédit', data: ds.credit, backgroundColor: 'rgba(255, 82, 82, 0.8)', borderColor: '#FF5252', borderWidth: 1 },
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, max: 10 } },
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+})();
+</script>
+<!-- jQuery + Select2 for supplier select -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+(function(){
+  const sel = document.getElementById('supplier');
+  if (!sel) return;
+  if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+    jQuery('#supplier').select2({
+      placeholder: '-- Choose a supplier --',
+      allowClear: true,
+      width: 'resolve'
+    }).on('change', function(){
+      document.getElementById('supplierForm').submit();
+    });
+  } else {
+    sel.addEventListener('change', function(){
+      document.getElementById('supplierForm').submit();
+    });
+  }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends 'base_project.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}Bons de commande - Liste{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/vendor/select2.min.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/select2-bootstrap-5-theme.min.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-button.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-badge.css' %}" rel="stylesheet" />
+<link href="{% static 'css/excel-table.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'orders/orders.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1 text-gray-800 fw-bold">
+        <i class='bx bx-clipboard me-2 text-primary'></i>Bons de Commande
+      </h1>
+      <p class="text-muted mb-0">Gestion et suivi des commandes importées</p>
+    </div>
+    <!-- Actions (Placeholder for future features like Import) -->
+    <div>
+       <!-- <a href="#" class="btn btn-primary"><i class='bx bx-import me-1'></i> Importer</a> -->
+    </div>
+  </div>
+
+  <!-- Stats & Filters -->
+  <div class="row g-4 mb-4">
+    <!-- Stat Card -->
+    <div class="col-md-4 col-xl-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                <i class='bx bx-file text-primary' style="font-size: 24px;"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.75rem;">Total Commandes</h6>
+              <h2 class="mb-0 fw-bold">{{ page_obj.paginator.count }}</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search/Filter -->
+    <div class="col-md-8 col-xl-9">
+      <div class="card border-0 shadow-sm h-100 justify-content-center">
+        <div class="card-body">
+          <form method="get" class="po-search-form row g-3 align-items-center">
+            <div class="col-md-10">
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class='bx bx-search text-muted'></i></span>
+                <select id="po-search" name="q" class="form-select border-start-0 ps-0" data-theme="bootstrap-5">
+                  <option value="">Rechercher par numéro de commande...</option>
+                  {% for s in suggestions %}
+                  <option value="{{ s.number }}" {% if query == s.number %}selected{% endif %}>
+                    {{ s.number }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-md-2">
+              {% if query %}
+              <a href="{% url 'orders:purchase_order_list' %}" class="btn btn-outline-secondary w-100">
+                <i class='bx bx-x me-1'></i>Effacer
+              </a>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if page_obj.object_list %}
+  <!-- Table Container -->
+  <div class="spectrum-table-container shadow-sm border-0">
+    <div class="table-header bg-white border-bottom py-3">
+        <div class="table-title d-flex align-items-center">
+            <h5 class="mb-0 fw-bold text-dark">
+                <i class="fas fa-table me-2 text-warning"></i>
+                Liste des Commandes
+            </h5>
+            <span class="badge bg-light text-dark border ms-3">{{ page_obj.paginator.count }} éléments</span>
+        </div>
+    </div>
+    
+    <!-- Zone de données -->
+    <div class="data-container">
+        <table class="data-table spectrum-Table table-hover">
+            <thead>
+                <tr>
+                    <th style="width: 40px" class="text-center"><input type="checkbox" id="select-all-rows" class="form-check-input"></th>
+                    <th>Purchasing Document</th>
+                    <th class="text-center">Currency</th>
+                    <th class="text-end">Total Amount</th>
+                    <th class="text-end">Received Amount</th>
+                    <th class="text-end">Remaining Amount</th>
+                    <th class="text-center">Progress</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for po in page_obj.object_list %}
+                <tr class="spectrum-Table-row align-middle">
+                    <td class="text-center"><input type="checkbox" class="row-checkbox form-check-input"></td>
+                    <td class="fw-bold">
+                        <a href="{% url 'orders:purchase_order_detail' po.number %}" class="text-decoration-none text-primary">
+                            {{ po.number }}
+                        </a>
+                    </td>
+                    <td class="text-center"><span class="badge bg-light text-dark border">{{ po.get_currency|default:"—" }}</span></td>
+                    <td class="text-end fw-semibold">{{ po.get_total_amount|default_if_none:"0"|intcomma }}</td>
+                    <td class="text-end text-success">{{ po.get_received_amount|default_if_none:"0"|intcomma }}</td>
+                    <td class="text-end text-muted">{{ po.get_remaining_amount|default_if_none:"0"|intcomma }}</td>
+                    <td class="text-center">
+                        {% with rate=po.get_progress_rate|default_if_none:"0" %}
+                          <div class="d-flex align-items-center justify-content-center">
+                          {% if rate|floatformat:0 >= 80 %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">{{ rate|floatformat:0 }}%</span>
+                          {% elif rate|floatformat:0 >= 50 %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">{{ rate|floatformat:0 }}%</span>
+                          {% else %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">{{ rate|floatformat:0 }}%</span>
+                          {% endif %}
+                          </div>
+                        {% endwith %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'orders:purchase_order_detail' po.number %}" class="btn btn-sm btn-light text-primary" data-bs-toggle="tooltip" title="Voir les détails">
+                            <i class='bx bx-show'></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Page navigation">
+      <ul class="pagination shadow-sm">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link border-0" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link border-0 bg-primary">{{ num }}</span></li>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link border-0 text-dark" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link border-0" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <div class="mb-3">
+      <div class="rounded-circle bg-light p-4 d-inline-block">
+        <i class='bx bx-search display-4 text-muted'></i>
+      </div>
+    </div>
+    <h3 class="h4 text-muted">Aucun bon de commande trouvé</h3>
+    <p class="text-muted mb-4">Essayez de modifier vos critères de recherche ou importez un fichier.</p>
+    {% if query %}
+    <a href="{% url 'orders:purchase_order_list' %}" class="btn btn-outline-primary">
+      Effacer la recherche
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

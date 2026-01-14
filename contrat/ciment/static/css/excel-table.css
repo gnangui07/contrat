@@ -1,0 +1,123 @@
+/* Variables Couleurs MTN */
+:root {
+    --mtn-yellow: #FFCC00;
+    --mtn-black: #000000;
+    --mtn-gray: #f8f9fa;
+    --mtn-dark-gray: #343a40;
+}
+
+/* Container principal */
+.spectrum-table-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+/* En-tête du tableau (Titre) */
+.table-header {
+    padding: 15px 20px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-title h5 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--mtn-black);
+}
+
+.table-subtitle {
+    font-size: 0.85rem;
+    color: #666;
+    margin-left: 10px;
+}
+
+/* Zone de données scrollable */
+.data-container {
+    overflow: auto;
+    max-height: 75vh; /* Hauteur max avant scroll */
+    width: 100%;
+    border-top: 1px solid #d0d0d0;
+}
+
+/* Le Tableau Excel-like */
+.data-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    margin: 0;
+}
+
+/* En-têtes de colonnes (Sticky) */
+.data-table th {
+    background-color: var(--mtn-yellow); /* Fond Jaune MTN */
+    color: var(--mtn-black);             /* Texte Noir */
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #d0d0d0;
+    white-space: nowrap;
+    position: sticky; /* Reste visible au scroll */
+    top: 0;
+    z-index: 10;
+    border-bottom: 2px solid #caa700;
+}
+
+/* Cellules de données */
+.data-table td {
+    padding: 8px 10px;
+    border: 1px solid #d0d0d0;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* Lignes alternées et survol */
+.data-table tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.data-table tr:hover {
+    background-color: #e8f4fc; /* Bleu très clair au survol */
+}
+
+/* Inputs dans le tableau (comme quantité livrée) */
+.quantity-delivered-input {
+    border: 1px solid transparent;
+    background: transparent;
+    width: 100%;
+    padding: 4px;
+    text-align: right;
+    outline: none;
+    font-weight: 600;
+}
+
+.quantity-delivered-input:focus {
+    border: 1px solid var(--mtn-yellow);
+    background: #fff;
+    border-radius: 4px;
+}
+
+/* Texte long (Description) */
+.field-longtext div {
+    max-width: 300px;
+    max-height: 60px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-size: 0.9em;
+    color: #555;
+}
+
+/* Pied de tableau */
+.data-table tfoot tr {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    border-top: 2px solid #a0a0a0;
+}
+
+.text-end { text-align: right; }

@@ -1,0 +1,272 @@
+<!-- evaluation_form.html - Version refondue -->
+{% extends 'base_project.html' %}
+{% block title %}{% if evaluation %}Edit{% else %}New{% endif %} Vendor Evaluation{% endblock %}
+{% block page_title %}{% if evaluation %}Edit Vendor Evaluation{% else %}New Vendor Evaluation{% endif %}{% endblock %}
+
+{% block content %}
+<div class="enterprise-card">
+  <div class="card-header">
+    <h3 class="h4 mb-0">
+      <i class='bx bx-star'></i>
+      {% if evaluation %}Edit Vendor Evaluation{% else %}Create New Vendor Evaluation{% endif %}
+    </h3>
+  </div>
+  
+  <div class="card-body">
+    <form method="post" id="evaluationForm">
+      {% csrf_token %}
+      
+      <!-- Form Errors -->
+      {% if form.non_field_errors %}
+      <div class="alert p-3 mb-4 border rounded" style="background: var(--danger-light); border-color: var(--danger);">
+        <div class="d-flex align-items-center">
+          <i class='bx bx-error-circle text-danger me-2'></i>
+          <div>
+            <strong>Validation Errors</strong>
+            <ul class="mb-0 mt-1">
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Supplier Selection -->
+      <div class="mb-5">
+        <div class="form-group">
+          <label for="{{ form.supplier.id_for_label }}" class="form-label required">Supplier</label>
+          {{ form.supplier }}
+          {% if form.supplier.errors %}
+          <div class="text-danger mt-1" style="font-size: 12px;">{{ form.supplier.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Evaluation Criteria -->
+      <div class="mb-5">
+        <h4 class="h4 mb-4 pb-2 border-bottom">Evaluation Criteria (0-10)</h4>
+        
+        <!-- Delivery Compliance -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.delivery_compliance.id_for_label }}" class="form-label required">Delivery Compliance</label>
+            {{ form.delivery_compliance }}
+            {% if form.delivery_compliance.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.delivery_compliance.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_delivery_compliance" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Timeline -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.delivery_timeline.id_for_label }}" class="form-label required">Delivery Timeline</label>
+            {{ form.delivery_timeline }}
+            {% if form.delivery_timeline.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.delivery_timeline.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_delivery_timeline" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advising Capability -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.advising_capability.id_for_label }}" class="form-label required">Advising Capability</label>
+            {{ form.advising_capability }}
+            {% if form.advising_capability.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.advising_capability.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_advising_capability" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- After Sales QOS -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.after_sales_qos.id_for_label }}" class="form-label required">After Sales Quality of Service</label>
+            {{ form.after_sales_qos }}
+            {% if form.after_sales_qos.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.after_sales_qos.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_after_sales_qos" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vendor Relationship -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.vendor_relationship.id_for_label }}" class="form-label required">Vendor Relationship</label>
+            {{ form.vendor_relationship }}
+            {% if form.vendor_relationship.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.vendor_relationship.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_vendor_relationship" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comments -->
+      <div class="mb-5">
+        <div class="form-group">
+          <label for="{{ form.comments.id_for_label }}" class="form-label">Comments</label>
+          {{ form.comments }}
+          {% if form.comments.errors %}
+          <div class="text-danger mt-1" style="font-size: 12px;">{{ form.comments.errors.0 }}</div>
+          {% endif %}
+          <div class="text-muted mt-1" style="font-size: 12px;">Optional comments about this evaluation</div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="d-flex justify-content-end gap-3 pt-4 border-top">
+        <a href="{% url 'evaluations:list' %}" class="btn btn-outline">
+          Cancel
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class='bx bx-save'></i>
+          {% if evaluation %}Update Evaluation{% else %}Create Evaluation{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Descriptions for vendor evaluation criteria
+const criteriaDescriptions = {
+  delivery_compliance: {
+    0: 'Non-compliant',
+    1: 'Non-compliant',
+    2: 'Compliance: 25% of expressed needs',
+    3: 'Compliance: 25% of expressed needs',
+    4: 'Compliance: 25% of expressed needs',
+    5: 'Compliance: 50% of expressed needs',
+    6: 'Compliance: 50% of expressed needs',
+    7: 'Compliant with requirements',
+    8: 'Compliant with requirements',
+    9: 'Compliant with requirements',
+    10: 'Superior / Better than expressed needs at same cost'
+  },
+  delivery_timeline: {
+    0: 'No delivery made',
+    1: 'No delivery made',
+    2: 'Delivery delay without notification',
+    3: 'Delivery delay without notification',
+    4: 'Negotiated delay and non-respect of new schedule with explanation',
+    5: 'Negotiated delay and non-respect of new schedule with explanation',
+    6: 'Negotiated delay and non-respect of new schedule with explanation',
+    7: 'Deadlines met',
+    8: 'Deadlines met',
+    9: 'Deadlines met',
+    10: 'Ahead of planned delivery deadline'
+  },
+  advising_capability: {
+    0: 'No advice',
+    1: 'No advice',
+    2: 'On request - Advice given but not useful',
+    3: 'On request - Advice given but not useful',
+    4: 'On request - Advice given useful but incomplete',
+    5: 'On request - Advice given useful but incomplete',
+    6: 'On request - Advice given useful but incomplete',
+    7: 'Advising capability meets our expectations',
+    8: 'Advising capability meets our expectations',
+    9: 'Advising capability meets our expectations',
+    10: 'Skills transfer & regular client training'
+  },
+  after_sales_qos: {
+    0: 'No after-sales service',
+    1: 'No after-sales service',
+    2: 'Not adapted to our expectations',
+    3: 'Not adapted to our expectations',
+    4: '50% adapted to our expectations without respecting deadlines',
+    5: '50% adapted to our expectations without respecting deadlines',
+    6: '50% adapted to our expectations without respecting deadlines',
+    7: '100% of requests and complaints resolved on time',
+    8: '100% of requests and complaints resolved on time',
+    9: '100% of requests and complaints resolved on time',
+    10: 'Problem anticipation / No incidents to report'
+  },
+  vendor_relationship: {
+    0: 'No contact',
+    1: 'No contact',
+    2: 'Unreachable outside visits/events/during order execution',
+    3: 'Unreachable outside visits/events/during order execution',
+    4: 'Reachable after 2 or 3 days of follow-up, reminders...',
+    5: 'Reachable after 2 or 3 days of follow-up, reminders...',
+    6: 'Reachable after 2 or 3 days of follow-up, reminders...',
+    7: 'Good contact / Responsive provider',
+    8: 'Good contact / Responsive provider',
+    9: 'Good contact / Responsive provider',
+    10: 'Good contact / Very responsive provider'
+  }
+};
+
+// Function to update description
+function updateDescription(criteriaName, value) {
+  const descElement = document.getElementById('desc_' + criteriaName);
+  if (descElement && criteriaDescriptions[criteriaName]) {
+    const description = criteriaDescriptions[criteriaName][value];
+    if (description) {
+      descElement.querySelector('span').textContent = description;
+      descElement.style.display = 'block';
+    } else {
+      descElement.querySelector('span').textContent = 'Select a score to see description';
+    }
+  }
+}
+
+// Add change events
+document.addEventListener('DOMContentLoaded', function() {
+  const criteria = ['delivery_compliance', 'delivery_timeline', 'advising_capability', 
+                    'after_sales_qos', 'vendor_relationship'];
+  
+  criteria.forEach(function(criteriaName) {
+    const select = document.getElementById('id_' + criteriaName);
+    if (select) {
+      // Add form control class
+      select.classList.add('form-control');
+      
+      // Show initial description if value exists
+      if (select.value) {
+        updateDescription(criteriaName, select.value);
+      }
+      
+      // Listen for changes
+      select.addEventListener('change', function() {
+        updateDescription(criteriaName, this.value);
+      });
+    }
+  });
+
+  // Add form-control class to other form elements
+  const textareas = document.querySelectorAll('textarea');
+  textareas.forEach(el => {
+    el.classList.add('form-control');
+  });
+
+  const otherSelects = document.querySelectorAll('select:not([id^="id_delivery"]):not([id^="id_advising"]):not([id^="id_after"]):not([id^="id_vendor"])');
+  otherSelects.forEach(el => {
+    el.classList.add('form-control');
+  });
+});
+</script>
+{% endblock %}

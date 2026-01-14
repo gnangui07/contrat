@@ -1,0 +1,292 @@
+<!-- buyer_evaluation_detail.html - Version refondue -->
+{% extends 'base_project.html' %}
+{% load static %}
+{% block title %}Buyer Evaluation - {{ evaluation.supplier.nom_complet_organisation }}{% endblock %}
+{% block page_title %}Buyer Evaluation Details{% endblock %}
+
+{% block page_actions %}
+<div class="action-group">
+  <a href="{% url 'evaluations:buyer_edit' evaluation.pk %}" class="btn btn-secondary">
+    <i class='bx bx-edit'></i> Edit
+  </a>
+  <a href="{% url 'evaluations:buyer_list' %}" class="btn btn-outline">
+    <i class='bx bx-arrow-back'></i> Back
+  </a>
+  <button class="btn btn-danger delete-buyer-evaluation-btn" 
+          data-evaluation-id="{{ evaluation.pk }}" 
+          data-supplier-name="{{ evaluation.supplier.nom_complet_organisation }}">
+    <i class='bx bx-trash'></i> Delete
+  </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Evaluation Header -->
+<div class="enterprise-card mb-5">
+  <div class="card-header">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <h2 class="h2 mb-1">Buyer Evaluation</h2>
+        <p class="text-muted mb-0">{{ evaluation.supplier.nom_complet_organisation }}</p>
+      </div>
+      <div>
+        {% with badge=evaluation.get_rating_badge %}
+        <span class="status-badge status-{{ badge.class }}">{{ badge.label }}</span>
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <!-- Evaluation Metadata -->
+    <div class="row mb-5">
+      <div class="col-md-6">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="rounded-circle bg-light p-2">
+            <i class='bx bx-calendar text-muted'></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 12px;">Evaluation Date</div>
+            <div class="font-weight-600">{{ evaluation.date_evaluation|date:"F d, Y H:i" }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="rounded-circle bg-light p-2">
+            <i class='bx bx-user text-muted'></i>
+          </div>
+          <div>
+            <div class="text-muted" style="font-size: 12px;">Evaluator</div>
+            <div class="font-weight-600">{{ evaluation.evaluator.get_full_name|default:evaluation.evaluator.email }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final Score -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="text-center p-5 border rounded" style="background: var(--neutral-10);">
+          <div class="display-1 fw-bold text-primary mb-2">{{ evaluation.buyer_final_rating }}/10</div>
+          <div class="h4 text-muted mb-3">Final Buyer Rating</div>
+          <div class="text-muted">Total Score: {{ evaluation.get_total_score }}/60</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Criteria Breakdown -->
+    <h3 class="h4 mb-4">Evaluation Criteria</h3>
+    <div class="row g-4 mb-5">
+      <div class="col-md-6 col-lg-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">Price Flexibility</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.price_flexibility }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.price_flexibility }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">RFX Deadline Compliance</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.rfx_deadline_compliance }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.rfx_deadline_compliance }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">Advisory Capability</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.advisory_capability }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.advisory_capability }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">Relationship Quality</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.relationship_quality }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.relationship_quality }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">RFX Response Quality</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.rfx_response_quality }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.rfx_response_quality }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h4 class="h5 mb-0">Credit Policy</h4>
+          </div>
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary mb-3">{{ evaluation.credit_policy }}/10</div>
+            <div class="text-muted small">
+              {{ descriptions.credit_policy }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    {% if evaluation.comments %}
+    <div class="enterprise-card mb-5">
+      <div class="card-header">
+        <h3 class="h4 mb-0">Comments</h3>
+      </div>
+      <div class="card-body">
+        <p class="mb-0" style="white-space: pre-wrap;">{{ evaluation.comments }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Other Evaluations of this Supplier -->
+    {% if supplier_evaluations %}
+    <div class="enterprise-card">
+      <div class="card-header">
+        <h3 class="h4 mb-0">Other Buyer Evaluations for this Supplier</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="grid-table">
+            <thead>
+              <tr>
+                <th>Evaluation Date</th>
+                <th>Final Rating</th>
+                <th>Evaluator</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for eval in supplier_evaluations %}
+              <tr>
+                <td>{{ eval.date_evaluation|date:"d/m/Y" }}</td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="font-weight-600 text-primary">{{ eval.buyer_final_rating }}/10</span>
+                    {% with badge=eval.get_rating_badge %}
+                    <span class="status-badge status-{{ badge.class }}">{{ badge.label }}</span>
+                    {% endwith %}
+                  </div>
+                </td>
+                <td>{{ eval.evaluator.email|default:"N/A" }}</td>
+                <td class="text-center">
+                  <a href="{% url 'evaluations:buyer_detail' eval.pk %}" class="btn btn-link">
+                    <i class='bx bx-show'></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Delete evaluation confirmation
+  document.querySelectorAll('.delete-buyer-evaluation-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const evaluationId = this.dataset.evaluationId;
+      const supplierName = this.dataset.supplierName;
+      
+      Swal.fire({
+        title: 'Confirm Deletion',
+        html: `Are you sure you want to delete the buyer evaluation for <strong>${supplierName}</strong>?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        customClass: {
+          container: 'swal2-container-enterprise'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = `/evaluations/buyer/${evaluationId}/delete/`;
+          
+          const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+          if (csrfToken) {
+            const csrfInput = csrfToken.cloneNode(true);
+            csrfInput.style.display = 'none';
+            form.appendChild(csrfInput);
+          } else {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+          }
+          
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    });
+  });
+});
+</script>
+
+<style>
+.swal2-container-enterprise .swal2-popup {
+  font-family: var(--font-family);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.swal2-container-enterprise .swal2-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--neutral-900);
+}
+
+.swal2-container-enterprise .swal2-html-container {
+  font-size: var(--font-size-sm);
+  color: var(--neutral-700);
+}
+</style>
+{% endblock %}

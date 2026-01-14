@@ -1,0 +1,255 @@
+<!-- contract_detail.html - Version refondue -->
+{% extends 'base_project.html' %}
+{% block title %}{{ contract.numero }} - Contract Details{% endblock %}
+{% block page_title %}Contract Details{% endblock %}
+
+{% block page_actions %}
+<div class="action-group">
+  <a href="{% url 'contracts:edit' contract.pk %}" class="btn btn-secondary">
+    <i class='bx bx-edit'></i> Edit
+  </a>
+  {% if user.is_superuser and contract.status == 'pending' %}
+  <form action="{% url 'contracts:validate' contract.pk %}" method="post" class="d-inline">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success">
+      <i class='bx bx-check'></i> Approve
+    </button>
+  </form>
+  <form action="{% url 'contracts:reject' contract.pk %}" method="post" class="d-inline">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">
+      <i class='bx bx-x'></i> Reject
+    </button>
+  </form>
+  {% endif %}
+  <a href="{% url 'contracts:list' %}" class="btn btn-outline">
+    <i class='bx bx-arrow-back'></i> Back
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Contract Header -->
+<div class="enterprise-card mb-5">
+  <div class="card-header">
+    <div class="d-flex align-items-center gap-4">
+      <div>
+        <h2 class="h2 mb-1">{{ contract.numero }}</h2>
+        <p class="text-muted mb-0">{{ contract.objet }}</p>
+      </div>
+      <div>
+        {% if contract.status == 'pending' %}
+        <span class="status-badge status-pending">Pending Review</span>
+        {% elif contract.status == 'active' %}
+        <span class="status-badge status-active">Active</span>
+        {% elif contract.status == 'expired' %}
+        <span class="status-badge status-expired">Expired</span>
+        {% elif contract.status == 'rejected' %}
+        <span class="status-badge status-rejected">Rejected</span>
+        {% else %}
+        <span class="status-badge status-suspended">Suspended</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <!-- Contract Status Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-5 p-3 border rounded" style="background: var(--neutral-10);">
+      <div class="d-flex align-items-center gap-4">
+        <div>
+          <div class="text-muted mb-1">Contract Type</div>
+          <div class="font-weight-600">{{ contract.get_type_display }}</div>
+        </div>
+        <div>
+          <div class="text-muted mb-1">Value</div>
+          <div class="font-weight-600">{{ contract.montant|floatformat:0 }} {{ contract.devise }}</div>
+        </div>
+        <div>
+          <div class="text-muted mb-1">Created On</div>
+          <div>{{ contract.date_creation|date:"d/m/Y" }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Renewal Alert -->
+    {% if contract.est_a_renouveler %}
+    <div class="alert d-flex align-items-center mb-5 p-3 border rounded" style="background: var(--warning-light); border-color: var(--warning);">
+      <i class='bx bx-error-circle text-warning' style="font-size: 24px; margin-right: 12px;"></i>
+      <div>
+        <strong>Contract Expiration Notice</strong>
+        <p class="mb-0">This contract expires in {{ contract.jours_avant_echeance }} days. Please initiate renewal procedures.</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Contract Details Grid -->
+    <div class="row">
+      <!-- General Information -->
+      <div class="col-md-6 mb-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h3 class="h4 mb-0">
+              <i class='bx bx-info-circle text-primary'></i>
+              General Information
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Contract Number</span>
+              <span class="font-weight-500">{{ contract.numero }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Contract Type</span>
+              <span>{{ contract.get_type_display }}</span>
+            </div>
+            {% if contract.type_contrat %}
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Contract Category</span>
+              <span>{{ contract.type_contrat }}</span>
+            </div>
+            {% endif %}
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Activity Type</span>
+              <span>{{ contract.type_activite|default:"-" }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Information -->
+      <div class="col-md-6 mb-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h3 class="h4 mb-0">
+              <i class='bx bx-money text-primary'></i>
+              Financial Details
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Contract Value</span>
+              <span class="h5 text-primary">{{ contract.montant|floatformat:2 }} {{ contract.devise }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Currency</span>
+              <span>{{ contract.get_devise_display }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Duration</span>
+              <span>{{ contract.duree_contrat }} years</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Renewal Type</span>
+              <span>{{ contract.type_renouvellement|default:"Manual" }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="col-md-6 mb-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h3 class="h4 mb-0">
+              <i class='bx bx-calendar text-primary'></i>
+              Timeline
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Signature Date</span>
+              <span>{{ contract.date_signature|date:"d/m/Y" }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Effective Date</span>
+              <span>{{ contract.date_effet|date:"d/m/Y" }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Expiration Date</span>
+              <span>{{ contract.date_expiry|date:"d/m/Y" }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Notice Period</span>
+              <span>{{ contract.preavis }} days</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Days Until Expiry</span>
+              <span class="font-weight-600 {% if contract.jours_avant_echeance < 90 %}text-warning{% else %}text-success{% endif %}">
+                {{ contract.jours_avant_echeance }} days
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Supplier Information -->
+      <div class="col-md-6 mb-4">
+        <div class="enterprise-card h-100">
+          <div class="card-header">
+            <h3 class="h4 mb-0">
+              <i class='bx bx-buildings text-primary'></i>
+              Supplier Information
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Supplier</span>
+              <a href="{% url 'suppliers:detail' contract.supplier.pk %}" class="text-primary font-weight-500">
+                {{ contract.supplier.nom_complet_organisation }}
+              </a>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Supplier Type</span>
+              <span>{{ contract.supplier.get_type_fournisseur_display }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+              <span class="text-muted">Email</span>
+              <span class="text-break">{{ contract.supplier.email|default:"-" }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Phone</span>
+              <span>{{ contract.supplier.telephone|default:"-" }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metadata -->
+      <div class="col-12">
+        <div class="enterprise-card">
+          <div class="card-header">
+            <h3 class="h4 mb-0">
+              <i class='bx bx-data text-primary'></i>
+              System Metadata
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <div class="text-muted mb-1">Created By</div>
+                <div>{{ contract.created_by.get_full_name|default:contract.created_by.email }}</div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-muted mb-1">Creation Date</div>
+                <div>{{ contract.date_creation|date:"d/m/Y H:i" }}</div>
+              </div>
+              {% if contract.validated_by %}
+              <div class="col-md-3">
+                <div class="text-muted mb-1">Approved By</div>
+                <div>{{ contract.validated_by.get_full_name|default:contract.validated_by.email }}</div>
+              </div>
+              {% endif %}
+              <div class="col-md-3">
+                <div class="text-muted mb-1">Last Modified</div>
+                <div>{{ contract.date_modification|date:"d/m/Y H:i" }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+[file content end]

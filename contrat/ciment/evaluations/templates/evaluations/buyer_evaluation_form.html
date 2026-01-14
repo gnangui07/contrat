@@ -1,0 +1,301 @@
+<!-- buyer_evaluation_form.html - Version refondue -->
+{% extends 'base_project.html' %}
+{% block title %}{% if evaluation %}Edit{% else %}New{% endif %} Buyer Evaluation{% endblock %}
+{% block page_title %}{% if evaluation %}Edit Buyer Evaluation{% else %}New Buyer Evaluation{% endif %}{% endblock %}
+
+{% block content %}
+<div class="enterprise-card">
+  <div class="card-header">
+    <h3 class="h4 mb-0">
+      <i class='bx bx-shopping-bag'></i>
+      {% if evaluation %}Edit Buyer Evaluation{% else %}Create New Buyer Evaluation{% endif %}
+    </h3>
+  </div>
+  
+  <div class="card-body">
+    <form method="post" id="buyerEvaluationForm">
+      {% csrf_token %}
+      
+      <!-- Form Errors -->
+      {% if form.non_field_errors %}
+      <div class="alert p-3 mb-4 border rounded" style="background: var(--danger-light); border-color: var(--danger);">
+        <div class="d-flex align-items-center">
+          <i class='bx bx-error-circle text-danger me-2'></i>
+          <div>
+            <strong>Validation Errors</strong>
+            <ul class="mb-0 mt-1">
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Supplier Selection -->
+      <div class="mb-5">
+        <div class="form-group">
+          <label for="{{ form.supplier.id_for_label }}" class="form-label required">Supplier</label>
+          {{ form.supplier }}
+          {% if form.supplier.errors %}
+          <div class="text-danger mt-1" style="font-size: 12px;">{{ form.supplier.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Evaluation Criteria -->
+      <div class="mb-5">
+        <h4 class="h4 mb-4 pb-2 border-bottom">Evaluation Criteria (0-10)</h4>
+        
+        <!-- Price Flexibility -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.price_flexibility.id_for_label }}" class="form-label required">Price Flexibility</label>
+            {{ form.price_flexibility }}
+            {% if form.price_flexibility.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.price_flexibility.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_price_flexibility" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RFX Deadline Compliance -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.rfx_deadline_compliance.id_for_label }}" class="form-label required">RFX Deadline Compliance</label>
+            {{ form.rfx_deadline_compliance }}
+            {% if form.rfx_deadline_compliance.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.rfx_deadline_compliance.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_rfx_deadline_compliance" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advisory Capability -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.advisory_capability.id_for_label }}" class="form-label required">Advisory Capability</label>
+            {{ form.advisory_capability }}
+            {% if form.advisory_capability.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.advisory_capability.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_advisory_capability" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Relationship Quality -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.relationship_quality.id_for_label }}" class="form-label required">Relationship Quality</label>
+            {{ form.relationship_quality }}
+            {% if form.relationship_quality.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.relationship_quality.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_relationship_quality" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RFX Response Quality -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.rfx_response_quality.id_for_label }}" class="form-label required">RFX Response Quality</label>
+            {{ form.rfx_response_quality }}
+            {% if form.rfx_response_quality.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.rfx_response_quality.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_rfx_response_quality" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Credit Policy -->
+        <div class="mb-4">
+          <div class="form-group">
+            <label for="{{ form.credit_policy.id_for_label }}" class="form-label required">Credit Policy</label>
+            {{ form.credit_policy }}
+            {% if form.credit_policy.errors %}
+            <div class="text-danger mt-1" style="font-size: 12px;">{{ form.credit_policy.errors.0 }}</div>
+            {% endif %}
+            <div class="mt-2 p-3 border rounded" id="desc_credit_policy" style="background: var(--neutral-10); font-size: 13px;">
+              <i class='bx bx-info-circle text-muted me-1'></i>
+              <span>Select a score to see description</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comments -->
+      <div class="mb-5">
+        <div class="form-group">
+          <label for="{{ form.comments.id_for_label }}" class="form-label">Comments</label>
+          {{ form.comments }}
+          {% if form.comments.errors %}
+          <div class="text-danger mt-1" style="font-size: 12px;">{{ form.comments.errors.0 }}</div>
+          {% endif %}
+          <div class="text-muted mt-1" style="font-size: 12px;">Optional comments about this evaluation</div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="d-flex justify-content-end gap-3 pt-4 border-top">
+        <a href="{% url 'evaluations:buyer_list' %}" class="btn btn-outline">
+          Cancel
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class='bx bx-save'></i>
+          {% if evaluation %}Update Evaluation{% else %}Create Evaluation{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Descriptions for buyer evaluation criteria
+const criteriaDescriptions = {
+  price_flexibility: {
+    0: 'No flexibility',
+    1: 'No flexibility',
+    2: 'Very limited flexibility',
+    3: 'Very limited flexibility',
+    4: 'Limited flexibility on some products',
+    5: 'Average flexibility',
+    6: 'Average flexibility',
+    7: 'Good flexibility',
+    8: 'Good flexibility',
+    9: 'Very good flexibility',
+    10: 'Excellent flexibility with advantageous negotiations'
+  },
+  rfx_deadline_compliance: {
+    0: 'No response',
+    1: 'No response',
+    2: 'Significant delay without justification',
+    3: 'Significant delay without justification',
+    4: 'Delay with justification',
+    5: 'Delay with justification',
+    6: 'Minor delay',
+    7: 'Deadlines met',
+    8: 'Deadlines met',
+    9: 'Deadlines met',
+    10: 'Response ahead of deadlines'
+  },
+  advisory_capability: {
+    0: 'No advice',
+    1: 'No advice',
+    2: 'Inappropriate advice',
+    3: 'Inappropriate advice',
+    4: 'Basic advice',
+    5: 'Basic advice',
+    6: 'Useful but incomplete advice',
+    7: 'Good advice',
+    8: 'Good advice',
+    9: 'Excellent proactive advice',
+    10: 'Exceptional expertise and innovation'
+  },
+  relationship_quality: {
+    0: 'No contact',
+    1: 'No contact',
+    2: 'Unreachable contacts',
+    3: 'Unreachable contacts',
+    4: 'Low responsiveness (> 3 days)',
+    5: 'Average responsiveness (2-3 days)',
+    6: 'Average responsiveness (2-3 days)',
+    7: 'Good responsiveness (< 24h)',
+    8: 'Good responsiveness (< 24h)',
+    9: 'Excellent responsiveness (< 12h)',
+    10: 'Exceptional and proactive responsiveness'
+  },
+  rfx_response_quality: {
+    0: 'No response',
+    1: 'No response',
+    2: 'Incomplete responses',
+    3: 'Incomplete responses',
+    4: 'Partial responses',
+    5: 'Acceptable responses',
+    6: 'Acceptable responses',
+    7: 'Good complete responses',
+    8: 'Good complete responses',
+    9: 'Excellent detailed responses',
+    10: 'Exceptional responses with added value'
+  },
+  credit_policy: {
+    0: '100% payment upon order',
+    1: '100% payment upon order',
+    2: 'Down payment > 80%',
+    3: 'Down payment > 80%',
+    4: 'Down payment 60-80%',
+    5: 'Down payment 40-60%',
+    6: 'Down payment 40-60%',
+    7: 'Down payment 20-40%',
+    8: 'Down payment < 20%',
+    9: 'Down payment < 20%',
+    10: 'No down payment required / Supplier credit'
+  }
+};
+
+// Function to update description
+function updateDescription(criteriaName, value) {
+  const descElement = document.getElementById('desc_' + criteriaName);
+  if (descElement && criteriaDescriptions[criteriaName]) {
+    const description = criteriaDescriptions[criteriaName][value];
+    const icon = descElement.querySelector('i');
+    if (description) {
+      descElement.querySelector('span').textContent = description;
+      descElement.style.display = 'block';
+    } else {
+      descElement.querySelector('span').textContent = 'Select a score to see description';
+    }
+  }
+}
+
+// Add change events
+document.addEventListener('DOMContentLoaded', function() {
+  const criteria = ['price_flexibility', 'rfx_deadline_compliance', 'advisory_capability', 
+                    'relationship_quality', 'rfx_response_quality', 'credit_policy'];
+  
+  criteria.forEach(function(criteriaName) {
+    const select = document.getElementById('id_' + criteriaName);
+    if (select) {
+      // Add form control class
+      select.classList.add('form-control');
+      
+      // Show initial description if value exists
+      if (select.value) {
+        updateDescription(criteriaName, select.value);
+      }
+      
+      // Listen for changes
+      select.addEventListener('change', function() {
+        updateDescription(criteriaName, this.value);
+      });
+    }
+  });
+
+  // Add form-control class to other form elements
+  const textareas = document.querySelectorAll('textarea');
+  textareas.forEach(el => {
+    el.classList.add('form-control');
+  });
+
+  const otherSelects = document.querySelectorAll('select:not([id^="id_price"]):not([id^="id_rfx"]):not([id^="id_advisory"]):not([id^="id_relationship"]):not([id^="id_credit"])');
+  otherSelects.forEach(el => {
+    el.classList.add('form-control');
+  });
+});
+</script>
+{% endblock %}

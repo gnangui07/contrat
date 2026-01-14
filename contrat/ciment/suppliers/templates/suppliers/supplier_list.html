@@ -1,0 +1,182 @@
+{% extends 'base_project.html' %}
+{% load static %}
+{% block title %}Fournisseurs - Liste{% endblock %}
+{% block extra_css %}
+<link href="{% static 'css/vendor/select2.min.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/select2-bootstrap-5-theme.min.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-button.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-badge.css' %}" rel="stylesheet" />
+<link href="{% static 'css/excel-table.css' %}" rel="stylesheet" />
+<style>
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .page-header h1 { font-size: 28px; color: #333; margin: 0; }
+  .filters { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .filter-group label { font-size: 13px; font-weight: 600; color: #666; }
+  .filter-group select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+  .empty-state i { font-size: 64px; color: #ddd; margin-bottom: 20px; }
+</style>
+{% endblock %}
+{% block content %}
+<div style="padding: 20px;">
+  <div class="page-header">
+    <h1>Liste des fournisseurs</h1>
+    <a href="{% url 'suppliers:create' %}" class="btn btn-primary">
+      <i class='bx bx-plus'></i> Nouveau fournisseur
+    </a>
+  </div>
+
+  <!-- Filtres et Recherche -->
+  <div class="filters">
+    <div class="filter-group" style="flex: 2;">
+      <label>Rechercher</label>
+      <form method="get" style="display: flex; gap: 10px;">
+        <input type="text" name="search" placeholder="Nom, email, téléphone, adresse..." 
+               value="{{ request.GET.search }}" 
+               style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">
+          <i class='bx bx-search'></i> Rechercher
+        </button>
+        {% if request.GET.search %}
+        <a href="{% url 'suppliers:list' %}" class="btn btn-outline-secondary" style="padding: 8px 16px;">
+          <i class='bx bx-x'></i> Effacer
+        </a>
+        {% endif %}
+      </form>
+    </div>
+    <div class="filter-group">
+      <label>Type</label>
+      <select onchange="window.location.href='?type='+this.value">
+        <option value="">Tous</option>
+        <option value="Local" {% if request.GET.type == 'Local' %}selected{% endif %}>Local</option>
+        <option value="Foreign" {% if request.GET.type == 'Foreign' %}selected{% endif %}>Foreign</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Catégorie</label>
+      <select onchange="window.location.href='?categorie='+this.value">
+        <option value="">Toutes</option>
+        <option value="Biens" {% if request.GET.categorie == 'Biens' %}selected{% endif %}>Biens</option>
+        <option value="Services" {% if request.GET.categorie == 'Services' %}selected{% endif %}>Services</option>
+        <option value="Autres" {% if request.GET.categorie == 'Autres' %}selected{% endif %}>Autres</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Statut</label>
+      <select onchange="window.location.href='?actif='+this.value">
+        <option value="">Tous</option>
+        <option value="1" {% if request.GET.actif == '1' %}selected{% endif %}>Actif</option>
+        <option value="0" {% if request.GET.actif == '0' %}selected{% endif %}>Inactif</option>
+      </select>
+    </div>
+  </div>
+
+  {% if suppliers %}
+  <!-- Excel-like Table Container -->
+  <div class="spectrum-table-container">
+    <div class="table-header">
+        <div class="table-title">
+            <h5>
+                <i class="fas fa-building me-2"></i>
+                Fournisseurs
+            </h5>
+            <span class="table-subtitle">Base de données fournisseurs</span>
+        </div>
+    </div>
+    
+    <div class="data-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px"><input type="checkbox" id="select-all-rows"></th>
+                    <th>Nom de l'organisation</th>
+                    <th>Type</th>
+                    <th>Catégorie</th>
+                    <th>Téléphone</th>
+                    <th>Email</th>
+                    <th>Adresse</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in suppliers %}
+                <tr>
+                    <td><input type="checkbox" class="row-checkbox"></td>
+                    <td class="fw-bold text-primary">{{ supplier.nom_complet_organisation }}</td>
+                    <td>
+                        {% if supplier.type_fournisseur == 'Local' %}
+                        <span class="spectrum-Badge spectrum-Badge--sizeS" style="background-color: #e3f2fd; color: #1976d2;">Local</span>
+                        {% else %}
+                        <span class="spectrum-Badge spectrum-Badge--sizeS" style="background-color: #f3e5f5; color: #7b1fa2;">Foreign</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ supplier.get_type_categorie_display }}</td>
+                    <td>{{ supplier.telephone }}</td>
+                    <td>{{ supplier.email }}</td>
+                    <td class="field-longtext"><div>{{ supplier.adresse_physique }}</div></td>
+                    <td class="text-center">
+                        {% if supplier.actif %}
+                        <span class="spectrum-Badge spectrum-Badge--sizeS" style="background-color: #d4edda; color: #155724;">Actif</span>
+                        {% else %}
+                        <span class="spectrum-Badge spectrum-Badge--sizeS" style="background-color: #f8d7da; color: #721c24;">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <a href="{% url 'suppliers:detail' supplier.pk %}" class="spectrum-Button spectrum-Button--quiet spectrum-Button--sizeS" title="Voir">
+                                <i class='bx bx-show'></i> 
+                            </a>
+                            <a href="{% url 'suppliers:edit' supplier.pk %}" class="spectrum-Button spectrum-Button--quiet spectrum-Button--sizeS" title="Modifier">
+                                <i class='bx bx-edit'></i> 
+                            </a>
+                            <button class="spectrum-Button spectrum-Button--quiet spectrum-Button--sizeS mail-supplier-btn"
+                                    type="button"
+                                    data-supplier-id="{{ supplier.pk }}"
+                                    data-supplier-name="{{ supplier.nom_complet_organisation }}"
+                                    data-supplier-email="{{ supplier.email }}" title="Envoyer Email">
+                                <i class='bx bx-mail-send'></i>
+                            </button>
+                            <button class="spectrum-Button spectrum-Button--quiet spectrum-Button--sizeS delete-supplier-btn"
+                                    style="color: #dc3545;"
+                                    type="button"
+                                    data-supplier-id="{{ supplier.pk }}"
+                                    data-supplier-name="{{ supplier.nom_complet_organisation }}" title="Supprimer">
+                                <i class='bx bx-trash'></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class='bx bx-buildings'></i>
+    <h3>Aucun fournisseur</h3>
+    <p>Commencez par créer votre premier fournisseur</p>
+    <a href="{% url 'suppliers:create' %}" class="btn btn-primary" style="margin-top: 20px;">
+      <i class='bx bx-plus'></i> Créer un fournisseur
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Données des messages Django pour JavaScript -->
+{% if messages %}
+<script id="django-messages-data" type="application/json">
+[
+  {% for message in messages %}
+  {"tags": "{{ message.tags }}", "message": "{{ message|escapejs }}"}{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+ </script>
+{% endif %}
+
+<script src="{% static 'js/vendor/sweetalert2.all.min.js' %}"></script>
+<script src="{% static 'suppliers/js/supplier_actions.js' %}"></script>
+{% endblock %}

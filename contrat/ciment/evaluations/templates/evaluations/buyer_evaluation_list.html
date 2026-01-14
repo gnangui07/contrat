@@ -1,0 +1,253 @@
+<!-- buyer_evaluation_list.html - Version refondue -->
+{% extends 'base_project.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link href="{% static 'css/vendor/spectrum-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/excel-table.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-button.css' %}" rel="stylesheet" />
+<link href="{% static 'css/vendor/spectrum-badge.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block title %}Buyer Evaluations{% endblock %}
+{% block page_title %}Buyer Evaluations{% endblock %}
+
+{% block page_actions %}
+<div class="action-group">
+  <a href="{% url 'evaluations:buyer_create' %}" class="btn btn-primary">
+    <i class='bx bx-plus'></i> New Evaluation
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Evaluation Type Navigation -->
+<div class="enterprise-card mb-4">
+  <div class="card-body">
+    <div class="d-flex gap-2">
+      <a href="{% url 'evaluations:list' %}" class="btn btn-outline">
+        <i class='bx bx-package'></i> Vendor Evaluations
+      </a>
+      <a href="{% url 'evaluations:buyer_list' %}" class="btn btn-primary">
+        <i class='bx bx-shopping-bag'></i> Buyer Evaluations
+      </a>
+      <a href="{% url 'evaluations:ranking_overview' %}" class="btn btn-outline">
+        <i class='bx bx-trophy'></i> Global Ranking
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Statistics -->
+<div class="row g-4 mb-4">
+  <div class="col-12 col-md-4">
+    <div class="enterprise-card h-100">
+      <div class="card-body text-center">
+        <div class="h3 mb-1">{{ stats.total }}</div>
+        <div class="text-muted" style="font-size: 13px;">Total Evaluations</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="enterprise-card h-100">
+      <div class="card-body text-center">
+        <div class="h3 mb-1">{{ stats.average_rating|floatformat:1 }}/10</div>
+        <div class="text-muted" style="font-size: 13px;">Average Rating</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="enterprise-card h-100">
+      <div class="card-body text-center">
+        <div class="h3 mb-1">{{ stats.unique_suppliers }}</div>
+        <div class="text-muted" style="font-size: 13px;">Suppliers Evaluated</div>
+      </div>
+</div>
+</div>
+
+<!-- Filters -->
+<div class="enterprise-card mb-4">
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-8">
+        <div class="form-group">
+          <label class="form-label">Search</label>
+          <div class="input-group">
+            <input type="text" name="search" class="form-control" 
+                   placeholder="Supplier, evaluator, comments..." 
+                   value="{{ request.GET.search }}">
+            <button type="submit" class="btn btn-primary">
+              <i class='bx bx-search'></i> Search
+            </button>
+            {% if request.GET.search %}
+            <a href="{% url 'evaluations:buyer_list' %}" class="btn btn-outline">
+              <i class='bx bx-x'></i> Clear
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label">Supplier</label>
+          <select name="supplier" class="form-control" onchange="this.form.submit()">
+            <option value="">All Suppliers</option>
+            {% for supplier in suppliers %}
+            <option value="{{ supplier.id }}" {% if request.GET.supplier == supplier.id|stringformat:"s" %}selected{% endif %}>
+              {{ supplier.nom_complet_organisation }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if evaluations %}
+<!-- Evaluations Table -->
+<div class="spectrum-table-container">
+  <div class="table-header">
+    <div class="table-title">
+      <h5><i class='bx bx-shopping-bag me-2'></i> Buyer Evaluations</h5>
+      <span class="table-subtitle">{{ evaluations|length }} evaluation{{ evaluations|length|pluralize }}</span>
+    </div>
+  </div>
+  
+  <div class="data-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Supplier</th>
+          <th class="text-center">Final Rating</th>
+          <th class="text-center">Price</th>
+          <th class="text-center">Deadlines</th>
+          <th class="text-center">Advisory</th>
+          <th class="text-center">Relationship</th>
+          <th class="text-center">RFX Quality</th>
+          <th class="text-center">Credit</th>
+          <th>Evaluator</th>
+          <th class="text-center">Date</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for evaluation in evaluations %}
+        <tr>
+          <td>
+            <div class="font-weight-600">{{ evaluation.supplier.nom_complet_organisation }}</div>
+          </td>
+          <td class="text-center">
+            <div class="d-flex flex-column align-items-center gap-1">
+              <span class="font-weight-600 text-primary">{{ evaluation.buyer_final_rating }}/10</span>
+              {% with badge=evaluation.get_rating_badge %}
+              <span class="status-badge status-{{ badge.class }}">{{ badge.label }}</span>
+              {% endwith %}
+            </div>
+          </td>
+          <td class="text-center">{{ evaluation.price_flexibility }}/10</td>
+          <td class="text-center">{{ evaluation.rfx_deadline_compliance }}/10</td>
+          <td class="text-center">{{ evaluation.advisory_capability }}/10</td>
+          <td class="text-center">{{ evaluation.relationship_quality }}/10</td>
+          <td class="text-center">{{ evaluation.rfx_response_quality }}/10</td>
+          <td class="text-center">{{ evaluation.credit_policy }}/10</td>
+          <td>{{ evaluation.evaluator.email|default:"N/A" }}</td>
+          <td class="text-center">{{ evaluation.date_evaluation|date:"d/m/Y" }}</td>
+          <td class="text-center">
+            <a href="{% url 'evaluations:buyer_detail' evaluation.pk %}" class="btn btn-link" title="View">
+              <i class='bx bx-show'></i>
+            </a>
+            <a href="{% url 'evaluations:buyer_edit' evaluation.pk %}" class="btn btn-link" title="Edit">
+              <i class='bx bx-edit'></i>
+            </a>
+            <button class="btn btn-link text-danger delete-buyer-evaluation-btn" 
+                    data-evaluation-id="{{ evaluation.pk }}" 
+                    data-supplier-name="{{ evaluation.supplier.nom_complet_organisation }}" title="Delete">
+              <i class='bx bx-trash'></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-5">
+  <div class="mb-3">
+    <i class='bx bx-shopping-bag display-1 text-muted'></i>
+  </div>
+  <h3 class="h4 text-muted mb-2">No buyer evaluations found</h3>
+  <p class="text-muted mb-4">Start by creating your first buyer evaluation</p>
+  <a href="{% url 'evaluations:buyer_create' %}" class="btn btn-primary">
+    <i class='bx bx-plus'></i> Create Buyer Evaluation
+  </a>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Handle delete confirmation
+document.addEventListener('DOMContentLoaded', function() {
+  // Show Django messages if any
+  {% if messages %}
+  {% for message in messages %}
+  Swal.fire({
+    icon: '{{ message.tags }}' === 'success' ? 'success' : 'error',
+    title: '{{ message.tags|capfirst }}',
+    text: '{{ message|escapejs }}',
+    confirmButtonColor: '#0052CC',
+    customClass: {
+      container: 'swal2-container-enterprise'
+    }
+  });
+  {% endfor %}
+  {% endif %}
+
+  // Delete buttons
+  document.querySelectorAll('.delete-buyer-evaluation-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const evaluationId = this.dataset.evaluationId;
+      const supplierName = this.dataset.supplierName;
+      
+      Swal.fire({
+        title: 'Confirm Deletion',
+        html: `Are you sure you want to delete the buyer evaluation for <strong>${supplierName}</strong>?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        customClass: {
+          container: 'swal2-container-enterprise'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = `/evaluations/buyer/${evaluationId}/delete/`;
+          
+          const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+          if (csrfToken) {
+            const csrfInput = csrfToken.cloneNode(true);
+            csrfInput.style.display = 'none';
+            form.appendChild(csrfInput);
+          } else {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+          }
+          
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

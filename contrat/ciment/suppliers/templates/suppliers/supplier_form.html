@@ -1,0 +1,654 @@
+{% extends 'base_project.html' %}
+{% block title %}{% if supplier %}Modifier{% else %}Créer{% endif %} un fournisseur{% endblock %}
+{% block extra_css %}
+<style>
+  .form-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .form-header { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-left: 4px solid #0052CC; }
+  .form-header h1 { font-size: 28px; color: #0052CC; margin: 0; }
+  .form-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .form-section { margin-bottom: 35px; }
+  .form-section h2 { font-size: 18px; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #0052CC; display: flex; align-items: center; gap: 10px; }
+  .form-section h2 i { color: #0052CC; }
+  .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group label { font-weight: 600; color: #333; font-size: 14px; }
+  .form-group input, .form-group select, .form-group textarea { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #0052CC; box-shadow: 0 0 0 3px rgba(0,82,204,0.1); }
+  .form-group textarea { min-height: 100px; resize: vertical; }
+  .form-group small { color: #666; font-size: 12px; }
+  .form-group input[type="checkbox"] { width: auto; }
+  .checkbox-group { display: flex; align-items: center; gap: 10px; }
+  .form-actions { display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+  .btn { padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; font-size: 14px; }
+  .btn-primary { background: #0052CC; color: white; }
+  .btn-primary:hover { background: #003D99; }
+  .btn-outline { background: white; color: #0052CC; border: 1px solid #0052CC; }
+  .btn-outline:hover { background: #0052CC; color: white; }
+  .required::after { content: ' *'; color: #c62828; }
+  .errorlist { list-style: none; padding: 0; margin: 5px 0 0 0; }
+  .errorlist li { color: #c62828; font-size: 13px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+  <div class="form-header">
+    <h1>{% if supplier %}Modifier le fournisseur{% else %}Créer un nouveau fournisseur{% endif %}</h1>
+  </div>
+
+  <div class="form-card">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <!-- Informations générales -->
+      <div class="form-section">
+        <h2><i class='bx bx-info-circle'></i> Informations générales</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Nom complet de l'organisation</label>
+            {{ form.nom_complet_organisation }}
+            {% if form.nom_complet_organisation.errors %}
+              <ul class="errorlist">{% for error in form.nom_complet_organisation.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Type fournisseur</label>
+            {{ form.type_fournisseur }}
+            <small>Local ou Foreign</small>
+            {% if form.type_fournisseur.errors %}
+              <ul class="errorlist">{% for error in form.type_fournisseur.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Type d'organisation</label>
+            {{ form.type_organisation }}
+            <small>SA, SARL, etc.</small>
+            {% if form.type_organisation.errors %}
+              <ul class="errorlist">{% for error in form.type_organisation.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Date d'enregistrement</label>
+            {{ form.date_enregistrement }}
+            <small>Format: JJ/MM/AAAA</small>
+            {% if form.date_enregistrement.errors %}
+              <ul class="errorlist">{% for error in form.date_enregistrement.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Téléphone</label>
+            {{ form.telephone }}
+            {% if form.telephone.errors %}
+              <ul class="errorlist">{% for error in form.telephone.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <ul class="errorlist">{% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>Site web</label>
+            {{ form.site_web }}
+            <small>Optionnel</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adresses -->
+      <div class="form-section">
+        <h2><i class='bx bx-map'></i> Adresses</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Adresse physique complète</label>
+            {{ form.adresse_physique }}
+            {% if form.adresse_physique.errors %}
+              <ul class="errorlist">{% for error in form.adresse_physique.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>Adresse du siège social</label>
+            {{ form.adresse_siege_social }}
+            <small>Si différente de l'adresse physique</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Représentant légal -->
+      <div class="form-section">
+        <h2><i class='bx bx-user-circle'></i> Représentant légal</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Nom du représentant légal</label>
+            {{ form.nom_representant_legal }}
+            {% if form.nom_representant_legal.errors %}
+              <ul class="errorlist">{% for error in form.nom_representant_legal.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Fonction</label>
+            {{ form.fonction_representant }}
+            {% if form.fonction_representant.errors %}
+              <ul class="errorlist">{% for error in form.fonction_representant.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Personne de contact -->
+      <div class="form-section">
+        <h2><i class='bx bx-phone-call'></i> Personne de contact</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Nom de la personne de contact</label>
+            {{ form.personne_contact }}
+            {% if form.personne_contact.errors %}
+              <ul class="errorlist">{% for error in form.personne_contact.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Téléphone</label>
+            {{ form.telephone_contact }}
+            {% if form.telephone_contact.errors %}
+              <ul class="errorlist">{% for error in form.telephone_contact.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Email</label>
+            {{ form.email_contact }}
+            {% if form.email_contact.errors %}
+              <ul class="errorlist">{% for error in form.email_contact.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents légaux -->
+      <div class="form-section">
+        <h2><i class='bx bx-file'></i> Documents légaux</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Registre de commerce</label>
+            {{ form.registre_commerce }}
+            {% if form.registre_commerce.errors %}
+              <ul class="errorlist">{% for error in form.registre_commerce.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+            <small class="text-muted">Format suggéré: CI-ABJ-YYYY-X-XXXXX</small>
+          </div>
+          <div class="form-group">
+            <label class="required">Numéro compte contribuable</label>
+            {{ form.numero_compte_contribuable }}
+            {% if form.numero_compte_contribuable.errors %}
+              <ul class="errorlist">{% for error in form.numero_compte_contribuable.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+            <small class="text-muted">Format suggéré: XXXXXXX L (7 chiffres + 1 lettre)</small>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Attestation de régularité fiscale</label>
+            {{ form.attestation_regularite_fiscale }}
+            {% if form.attestation_regularite_fiscale.errors %}
+              <ul class="errorlist">{% for error in form.attestation_regularite_fiscale.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Numéro CNPS</label>
+            {{ form.numero_cnps }}
+            {% if form.numero_cnps.errors %}
+              <ul class="errorlist">{% for error in form.numero_cnps.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Informations bancaires -->
+      <div class="form-section">
+        <h2><i class='bx bx-credit-card'></i> Informations bancaires</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Rechercher une banque</label>
+            {{ form.banque_reference }}
+            {% if form.banque_reference.errors %}
+              <ul class="errorlist">{% for error in form.banque_reference.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Banque (Sélectionnée)</label>
+            {{ form.banque }}
+            {% if form.banque.errors %}
+              <ul class="errorlist">{% for error in form.banque.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Agence</label>
+            {{ form.agence }}
+            {% if form.agence.errors %}
+              <ul class="errorlist">{% for error in form.agence.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">IBAN</label>
+            {{ form.iban }}
+            <small>24 positions pour les fournisseurs locaux</small>
+            {% if form.iban.errors %}
+              <ul class="errorlist">{% for error in form.iban.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>BIC/SWIFT</label>
+            {{ form.bic_swift }}
+            <small>Obligatoire pour les fournisseurs Foreign</small>
+          </div>
+          <div class="form-group">
+            <label class="required">Modalité de règlement</label>
+            {{ form.modalite_paiement }}
+            {% if form.modalite_paiement.errors %}
+              <ul class="errorlist">{% for error in form.modalite_paiement.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Branche d'activité -->
+      <div class="form-section">
+        <h2><i class='bx bx-category'></i> Branche d'activité</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Type catégorie</label>
+            {{ form.type_categorie }}
+            <small>Biens, Services ou Autres</small>
+            {% if form.type_categorie.errors %}
+              <ul class="errorlist">{% for error in form.type_categorie.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Catégorie</label>
+            {{ form.categorie }}
+            {% if form.categorie.errors %}
+              <ul class="errorlist">{% for error in form.categorie.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Description catégorie</label>
+            {{ form.description_categorie }}
+            {% if form.description_categorie.errors %}
+              <ul class="errorlist">{% for error in form.description_categorie.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Statut -->
+      <div class="form-section">
+        <h2><i class='bx bx-check-circle'></i> Statut</h2>
+        <div class="checkbox-group">
+          {{ form.actif }}
+          <label for="{{ form.actif.id_for_label }}">Fournisseur actif</label>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class='bx bx-save'></i> {% if supplier %}Enregistrer les modifications{% else %}Créer le fournisseur{% endif %}
+        </button>
+        <a href="{% if supplier %}{% url 'suppliers:detail' supplier.pk %}{% else %}{% url 'suppliers:list' %}{% endif %}" class="btn btn-outline">
+          <i class='bx bx-x'></i> Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+
+<script>
+$(document).ready(function() {
+    // Initialiser Select2 en mode standard (sans AJAX pour la recherche)
+    $('#id_banque_reference').select2({
+        placeholder: 'Sélectionnez une banque...',
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Lorsqu'une banque est sélectionnée
+    $('#id_banque_reference').on('change', function (e) {
+        var banqueId = $(this).val();
+        // Vérifier si c'est "AUTRE" (on regarde le texte de l'option sélectionnée)
+        var selectedText = $(this).find("option:selected").text();
+        var isAutre = selectedText.includes("AUTRE");
+        
+        if (banqueId && !isAutre) {
+            // Banque standard sélectionnée
+            // Rendre les champs readonly
+            $('#id_banque').prop('readonly', true);
+            
+            // Récupérer les détails de la banque via AJAX
+            $.ajax({
+                url: '{% url "suppliers:get_banque_details" 0 %}'.replace('0', banqueId),
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        // Mettre à jour le champ banque (texte)
+                        $('#id_banque').val(data.nom);
+                        
+                        // Mettre à jour le BIC/SWIFT si disponible
+                        if (data.code_bic) {
+                            $('#id_bic_swift').val(data.code_bic);
+                        }
+                        
+                        // Pour les fournisseurs locaux, ajouter le préfixe IBAN + Code Banque
+                        var typeFournisseur = $('#id_type_fournisseur').val();
+                        if (typeFournisseur === 'Local') {
+                            var ibanField = $('#id_iban');
+                            
+                            // Construire le début de l'IBAN : CI93 + Code Banque
+                            var ibanStart = (data.iban_prefix || 'CI93');
+                            if (data.code_banque) {
+                                ibanStart += data.code_banque;
+                            }
+                            
+                            // Mettre à jour et formater
+                            var currentVal = ibanField.val().replace(/\s/g, '');
+                            
+                            // Si vide ou juste CI93, on met le nouveau début complet
+                            if (!currentVal || currentVal === 'CI93') {
+                                ibanField.val(formatIBAN(ibanStart));
+                            } else if (currentVal.startsWith('CI')) {
+                                // Si on a déjà un IBAN local (ex: CI93 ANCIEN...), on remplace juste le code banque (pos 4 à 9)
+                                // Structure: CIkk BBBBB ...
+                                var prefix = currentVal.substring(0, 4); // CI93
+                                var rest = currentVal.substring(9); // Le reste après le code banque (s'il y en a)
+                                
+                                // Nouveau code banque à insérer (data.code_banque est supposé être le BBBBB)
+                                // On reconstruit : CI93 + NOUVEAU_CODE + RESTE
+                                if (data.code_banque) {
+                                    var newIban = prefix + data.code_banque + rest;
+                                    ibanField.val(formatIBAN(newIban));
+                                }
+                            }
+                            
+                            // Déclencher l'événement input pour la validation visuelle
+                            ibanField.trigger('input');
+                        }
+                    }
+                }
+            });
+        } else if (isAutre) {
+            // Cas "AUTRE / BANQUE ETRANGERE"
+            // Rendre le champ banque éditable et vider sa valeur
+            $('#id_banque').prop('readonly', false).val('').attr('placeholder', 'Saisissez le nom de la banque...');
+            $('#id_bic_swift').val('');
+            
+            // Si le type fournisseur n'est pas Foreign, le changer automatiquement
+            if ($('#id_type_fournisseur').val() !== 'Foreign') {
+                $('#id_type_fournisseur').val('Foreign').trigger('change');
+            }
+            
+            // Focus sur le champ banque pour inviter à la saisie
+            setTimeout(function() { $('#id_banque').focus(); }, 100);
+            
+        } else {
+            // Si la sélection est effacée
+            $('#id_banque').val('').prop('readonly', true);
+            $('#id_bic_swift').val('');
+        }
+    });
+
+    // Gérer le changement de type fournisseur
+    $('#id_type_fournisseur').change(function() {
+        var typeFournisseur = $(this).val();
+        var ibanField = $('#id_iban');
+        var currentIban = ibanField.val();
+        
+        if (typeFournisseur === 'Local') {
+            // S'assurer que l'IBAN commence par CI93
+            if (!currentIban.startsWith('CI93')) {
+                ibanField.val('CI93' + currentIban);
+            }
+            // Validation de la longueur
+            ibanField.attr('maxlength', '28');
+            $('label[for="id_iban"] small').text('28 positions (CI93 + 24 caractères)');
+        } else {
+            // Pour les foreign, retirer CI93 si présent
+            if (currentIban.startsWith('CI93')) {
+                ibanField.val(currentIban.substring(4));
+            }
+            ibanField.removeAttr('maxlength');
+            $('label[for="id_iban"] small').text('Format IBAN international');
+            
+            // BIC/SWIFT obligatoire pour Foreign
+            $('#id_bic_swift').attr('required', true);
+        }
+    });
+
+    // Initialiser les valeurs au chargement
+    $('#id_type_fournisseur').trigger('change');
+    
+    // Pré-remplir si une banque est déjà sélectionnée
+    var banqueId = $('#id_banque_reference').val();
+    if (banqueId) {
+        // Vérifier si c'est AUTRE au chargement
+        var selectedText = $('#id_banque_reference').find("option:selected").text();
+        if (selectedText.includes("AUTRE")) {
+             $('#id_banque').prop('readonly', false);
+             // On ne vide pas la valeur car c'est une modification
+        } else {
+            $.ajax({
+                url: '{% url "suppliers:get_banque_details" 0 %}'.replace('0', banqueId),
+                success: function(data) {
+                    if (data.success) {
+                        $('#id_banque').val(data.nom);
+                        if (data.code_bic && !$('#id_bic_swift').val()) {
+                            $('#id_bic_swift').val(data.code_bic);
+                        }
+                    }
+                }
+            });
+        }
+    }
+    // --- Nouvelles Automatisations Modernes ---
+
+     // 1 & 2. Gestion Intelligente de l'IBAN et Type Fournisseur
+     function updateIBANStructure() {
+         var typeFournisseur = $('#id_type_fournisseur').val();
+         var ibanField = $('#id_iban');
+         var currentVal = ibanField.val().replace(/\s/g, ''); // Toujours travailler sans espaces
+         
+         if (typeFournisseur === 'Local') {
+             // Masque visuel ou placeholder intelligent
+             ibanField.attr('placeholder', 'CI93 BBBBB GGGGG CCCCCCCCCCCC KK');
+             ibanField.attr('maxlength', '34'); // 28 chars + 6 espaces
+             
+             // Si le champ est vide ou incomplet, s'assurer qu'il commence bien
+             if (!currentVal.startsWith('CI')) {
+                 ibanField.val('CI93 '); 
+             }
+         } else {
+             // Foreign
+             ibanField.attr('placeholder', 'IBAN International');
+             ibanField.removeAttr('maxlength');
+         }
+     }
+     
+     $('#id_type_fournisseur').change(updateIBANStructure);
+
+     // Fonction de formatage IBAN UEMOA avec espaces
+     function formatIBAN(val) {
+        // Supprimer tout ce qui n'est pas alphanumérique
+        var raw = val.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        
+        // Si c'est un IBAN local (commence par CI)
+        if (raw.startsWith('CI')) {
+            // Structure: CIkk BBBBB GGGGG CCCCCCCCCCCC KK
+            // CIkk (4)
+            // BBBBB (5)
+            // GGGGG (5)
+            // CCCCCCCCCCCC (12)
+            // KK (2)
+            
+            var formatted = '';
+            
+            // Bloc 1: CIkk
+            if (raw.length > 0) formatted += raw.substring(0, 4);
+            if (raw.length > 4) formatted += ' ' + raw.substring(4, 9);  // Code Banque
+            if (raw.length > 9) formatted += ' ' + raw.substring(9, 14); // Code Guichet
+            if (raw.length > 14) formatted += ' ' + raw.substring(14, 26); // Numéro Compte
+            if (raw.length > 26) formatted += ' ' + raw.substring(26, 28); // Clé RIB
+            
+            return formatted;
+        }
+        
+        // Sinon retour brut (Foreign)
+        return raw;
+     }
+
+     $('#id_iban').on('input', function() {
+         var input = $(this);
+         var val = input.val();
+         var cursorPosition = this.selectionStart;
+         
+         // Ne formater que si c'est Local
+         if ($('#id_type_fournisseur').val() === 'Local') {
+             var formatted = formatIBAN(val);
+             
+             // Si la valeur a changé (formatage appliqué), mettre à jour
+             if (val !== formatted) {
+                 input.val(formatted);
+                 // On ne gère pas la position du curseur finement ici pour simplifier, 
+                 // l'utilisateur tape généralement à la fin.
+             }
+             
+             // Validation Visuelle
+             var rawLength = formatted.replace(/\s/g, '').length;
+             if(rawLength === 28) {
+                 input.css('border-color', '#2ecc71'); // Vert
+                 input.next('.help-text-iban').remove();
+                 input.after('<small class="text-success help-text-iban"><i class="bx bx-check"></i> Format IBAN valide (28 caractères)</small>');
+             } else {
+                 input.css('border-color', '#e74c3c'); // Rouge
+                 input.next('.help-text-iban').remove();
+                 var missing = 28 - rawLength;
+                 if (missing > 0) {
+                    input.after('<small class="text-danger help-text-iban">Encore ' + missing + ' caractères requis</small>');
+                 }
+             }
+         } else {
+             // Reset style for Foreign
+             input.css('border-color', '');
+             input.next('.help-text-iban').remove();
+         }
+     });
+     
+     // Nettoyage avant soumission du formulaire (optionnel, Django peut gérer, mais mieux vaut envoyer propre)
+     $('form').on('submit', function() {
+         var ibanField = $('#id_iban');
+         if ($('#id_type_fournisseur').val() === 'Local') {
+             ibanField.val(ibanField.val().replace(/\s/g, ''));
+         }
+     });
+
+     // 3. Contextualisation Documents Légaux
+     function updateDocumentsRequirements() {
+         var typeOrg = $('#id_type_organisation').val();
+         var docsSection = $('.form-section:contains("Documents légaux")'); // Sélecteur un peu large, idéalement mettre un ID
+         
+         // Liste des types nécessitant RCCM et CC complets
+         var corporateTypes = ['SA', 'SARL', 'SUARL', 'GIE', 'SNC', 'SCS', 'SCA'];
+         
+         if (corporateTypes.includes(typeOrg)) {
+             // Afficher tout et marquer requis
+             $('label[for="id_registre_commerce"]').addClass('required');
+             $('label[for="id_numero_compte_contribuable"]').addClass('required');
+             $('#id_registre_commerce, #id_numero_compte_contribuable').attr('required', true);
+             // Suggérer le format RCCM standard
+             $('#id_registre_commerce').attr('placeholder', 'CI-ABJ-YYYY-X-XXXXX');
+         } else if (typeOrg === 'Association' || typeOrg === 'Autre') {
+             // Alléger les requis
+             $('label[for="id_registre_commerce"]').removeClass('required');
+             $('#id_registre_commerce').removeAttr('required').attr('placeholder', 'Si applicable');
+             // Le compte contribuable reste souvent requis même pour les assos, mais on peut adapter
+         }
+     }
+     
+     $('#id_type_organisation').change(updateDocumentsRequirements);
+     
+     // 4. Email -> Site Web
+     $('#id_email').on('blur', function() {
+         var email = $(this).val();
+         var siteWebField = $('#id_site_web');
+         
+         // Ne rien faire si le site est déjà rempli
+         if (siteWebField.val()) return;
+         
+         if (email && email.includes('@')) {
+             var domain = email.split('@')[1];
+             // Liste noire des domaines publics
+             var publicDomains = ['gmail.com', 'yahoo.com', 'yahoo.fr', 'hotmail.com', 'outlook.com', 'orange.ci', 'aviso.ci'];
+             
+             if (!publicDomains.includes(domain)) {
+                 // Suggestion automatique
+                 var suggestedSite = 'https://www.' + domain;
+                 siteWebField.val(suggestedSite);
+                 
+                 // Petit effet visuel pour montrer l'automatisme
+                 siteWebField.css('background-color', '#e8f0fe');
+                 setTimeout(function() {
+                     siteWebField.css('background-color', '');
+                 }, 1000);
+             }
+         }
+     });
+
+     // Initialisation au chargement
+     updateIBANStructure();
+     updateDocumentsRequirements();
+     
+     // Validation et formatage basique pour RCCM et Compte Contribuable
+    $('#id_registre_commerce').on('blur', function() {
+        var val = $(this).val().toUpperCase();
+        $(this).val(val);
+        // Exemple simple de formatage si commence par CI
+        if(val.startsWith('CI') && !val.includes('-')) {
+             // Essai de formatage automatique basique (juste pour l'exemple)
+             // CIABJ2023B12345 -> CI-ABJ-2023-B-12345
+             // C'est complexe à généraliser sans regex stricte, donc on reste prudent
+        }
+    });
+
+    $('#id_numero_compte_contribuable').on('blur', function() {
+        var val = $(this).val().toUpperCase().replace(/\s/g, '');
+        // Format standard: 7 chiffres + 1 lettre (ex: 1234567A)
+        // Ou ancien format avec tiret
+        if(val.length >= 8) {
+             // Ajouter un espace avant la dernière lettre si absent
+             var lastChar = val.slice(-1);
+             var numbers = val.slice(0, -1);
+             if(isNaN(lastChar) && !isNaN(numbers)) {
+                 $(this).val(numbers + ' ' + lastChar);
+             } else {
+                 $(this).val(val);
+             }
+        } else {
+            $(this).val(val);
+        }
+    });
+});
+</script>
+{% endblock %}
