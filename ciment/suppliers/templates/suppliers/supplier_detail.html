@@ -1,0 +1,223 @@
+{% extends 'base_project.html' %}
+{% block title %}{{ supplier.nom_complet_organisation }} - Détail{% endblock %}
+{% block extra_css %}
+<style>
+  .detail-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
+  .detail-header { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-left: 4px solid #0052CC; }
+  .detail-header h1 { font-size: 28px; color: #0052CC; margin-bottom: 10px; }
+  .detail-header .meta { display: flex; gap: 20px; flex-wrap: wrap; }
+  .badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .badge-success { background: #e8f5e9; color: #2e7d32; }
+  .badge-danger { background: #ffebee; color: #c62828; }
+  .badge-local { background: #e3f2fd; color: #1976d2; }
+  .badge-foreign { background: #f3e5f5; color: #7b1fa2; }
+  .info-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+  .info-section { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .info-section h2 { font-size: 18px; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #0052CC; display: flex; align-items: center; gap: 10px; }
+  .info-section h2 i { color: #0052CC; }
+  .info-row { display: flex; margin-bottom: 15px; }
+  .info-label { font-weight: 600; color: #666; min-width: 200px; }
+  .info-value { color: #333; flex: 1; }
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; margin-right: 10px; }
+  .btn-primary { background: #0052CC; color: white; }
+  .btn-primary:hover { background: #003D99; }
+  .btn-outline { background: white; color: #0052CC; border: 1px solid #0052CC; }
+  .btn-outline:hover { background: #0052CC; color: white; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="detail-container">
+  <div class="detail-header">
+    <h1>{{ supplier.nom_complet_organisation }}</h1>
+    <div class="meta">
+      {% if supplier.type_fournisseur == 'Local' %}
+      <span class="badge badge-local">Local</span>
+      {% else %}
+      <span class="badge badge-foreign">Foreign</span>
+      {% endif %}
+      {% if supplier.actif %}
+      <span class="badge badge-success">Actif</span>
+      {% else %}
+      <span class="badge badge-danger">Inactif</span>
+      {% endif %}
+      <span style="color: #666;">{{ supplier.get_type_organisation_display }}</span>
+      <span style="color: #666;">{{ supplier.get_type_categorie_display }}</span>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <a href="{% url 'suppliers:edit' supplier.pk %}" class="btn btn-primary">
+      <i class='bx bx-edit'></i> Modifier
+    </a>
+    <a href="{% url 'suppliers:list' %}" class="btn btn-outline">
+      <i class='bx bx-arrow-back'></i> Retour à la liste
+    </a>
+  </div>
+
+  <div class="info-sections">
+    <!-- Informations générales -->
+    <div class="info-section">
+      <h2><i class='bx bx-info-circle'></i> Informations générales</h2>
+      <div class="info-row">
+        <span class="info-label">Type fournisseur:</span>
+        <span class="info-value">{{ supplier.get_type_fournisseur_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Type organisation:</span>
+        <span class="info-value">{{ supplier.get_type_organisation_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Date enregistrement:</span>
+        <span class="info-value">{{ supplier.date_enregistrement|date:"d/m/Y" }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Téléphone:</span>
+        <span class="info-value">{{ supplier.telephone }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email:</span>
+        <span class="info-value">{{ supplier.email }}</span>
+      </div>
+      {% if supplier.site_web %}
+      <div class="info-row">
+        <span class="info-label">Site web:</span>
+        <span class="info-value"><a href="{{ supplier.site_web }}" target="_blank" style="color: #0052CC;">{{ supplier.site_web }}</a></span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Adresses -->
+    <div class="info-section">
+      <h2><i class='bx bx-map'></i> Adresses</h2>
+      <div class="info-row">
+        <span class="info-label">Adresse physique:</span>
+        <span class="info-value">{{ supplier.adresse_physique }}</span>
+      </div>
+      {% if supplier.adresse_siege_social %}
+      <div class="info-row">
+        <span class="info-label">Siège social:</span>
+        <span class="info-value">{{ supplier.adresse_siege_social }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Représentant légal -->
+    <div class="info-section">
+      <h2><i class='bx bx-user-circle'></i> Représentant légal</h2>
+      <div class="info-row">
+        <span class="info-label">Nom:</span>
+        <span class="info-value">{{ supplier.nom_representant_legal }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Fonction:</span>
+        <span class="info-value">{{ supplier.fonction_representant }}</span>
+      </div>
+    </div>
+
+    <!-- Personne de contact -->
+    <div class="info-section">
+      <h2><i class='bx bx-phone-call'></i> Personne de contact</h2>
+      <div class="info-row">
+        <span class="info-label">Nom:</span>
+        <span class="info-value">{{ supplier.personne_contact }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Téléphone:</span>
+        <span class="info-value">{{ supplier.telephone_contact }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email:</span>
+        <span class="info-value">{{ supplier.email_contact }}</span>
+      </div>
+    </div>
+
+    <!-- Documents légaux -->
+    <div class="info-section">
+      <h2><i class='bx bx-file'></i> Documents légaux</h2>
+      <div class="info-row">
+        <span class="info-label">Registre de commerce:</span>
+        <span class="info-value">{{ supplier.registre_commerce }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">N° contribuable:</span>
+        <span class="info-value">{{ supplier.numero_compte_contribuable }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Attestation fiscale:</span>
+        <span class="info-value">{{ supplier.attestation_regularite_fiscale }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">N° CNPS:</span>
+        <span class="info-value">{{ supplier.numero_cnps }}</span>
+      </div>
+    </div>
+
+    <!-- Informations bancaires -->
+    <div class="info-section">
+      <h2><i class='bx bx-credit-card'></i> Informations bancaires</h2>
+      <div class="info-row">
+        <span class="info-label">Banque:</span>
+        <span class="info-value">{{ supplier.banque }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Agence:</span>
+        <span class="info-value">{{ supplier.agence }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">IBAN:</span>
+        <span class="info-value">{{ supplier.iban }}</span>
+      </div>
+      {% if supplier.bic_swift %}
+      <div class="info-row">
+        <span class="info-label">BIC/SWIFT:</span>
+        <span class="info-value">{{ supplier.bic_swift }}</span>
+      </div>
+      {% endif %}
+      <div class="info-row">
+        <span class="info-label">Modalité paiement:</span>
+        <span class="info-value">{{ supplier.get_modalite_paiement_display }}</span>
+      </div>
+    </div>
+
+    <!-- Branche d'activité -->
+    <div class="info-section">
+      <h2><i class='bx bx-category'></i> Branche d'activité</h2>
+      <div class="info-row">
+        <span class="info-label">Type:</span>
+        <span class="info-value">{{ supplier.get_type_categorie_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Catégorie:</span>
+        <span class="info-value">{{ supplier.get_categorie_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Description:</span>
+        <span class="info-value">{{ supplier.description_categorie }}</span>
+      </div>
+    </div>
+
+    <!-- Métadonnées -->
+    <div class="info-section">
+      <h2><i class='bx bx-time'></i> Métadonnées</h2>
+      <div class="info-row">
+        <span class="info-label">Date création:</span>
+        <span class="info-value">{{ supplier.date_creation|date:"d/m/Y H:i" }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Dernière modification:</span>
+        <span class="info-value">{{ supplier.date_modification|date:"d/m/Y H:i" }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Statut:</span>
+        <span class="info-value">
+          {% if supplier.actif %}
+          <span class="badge badge-success">Actif</span>
+          {% else %}
+          <span class="badge badge-danger">Inactif</span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

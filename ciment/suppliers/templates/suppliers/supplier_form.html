@@ -1,0 +1,303 @@
+{% extends 'base_project.html' %}
+{% block title %}{% if supplier %}Modifier{% else %}Créer{% endif %} un fournisseur{% endblock %}
+{% block extra_css %}
+<style>
+  .form-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .form-header { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-left: 4px solid #0052CC; }
+  .form-header h1 { font-size: 28px; color: #0052CC; margin: 0; }
+  .form-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .form-section { margin-bottom: 35px; }
+  .form-section h2 { font-size: 18px; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #0052CC; display: flex; align-items: center; gap: 10px; }
+  .form-section h2 i { color: #0052CC; }
+  .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group label { font-weight: 600; color: #333; font-size: 14px; }
+  .form-group input, .form-group select, .form-group textarea { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #0052CC; box-shadow: 0 0 0 3px rgba(0,82,204,0.1); }
+  .form-group textarea { min-height: 100px; resize: vertical; }
+  .form-group small { color: #666; font-size: 12px; }
+  .form-group input[type="checkbox"] { width: auto; }
+  .checkbox-group { display: flex; align-items: center; gap: 10px; }
+  .form-actions { display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+  .btn { padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; font-size: 14px; }
+  .btn-primary { background: #0052CC; color: white; }
+  .btn-primary:hover { background: #003D99; }
+  .btn-outline { background: white; color: #0052CC; border: 1px solid #0052CC; }
+  .btn-outline:hover { background: #0052CC; color: white; }
+  .required::after { content: ' *'; color: #c62828; }
+  .errorlist { list-style: none; padding: 0; margin: 5px 0 0 0; }
+  .errorlist li { color: #c62828; font-size: 13px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+  <div class="form-header">
+    <h1>{% if supplier %}Modifier le fournisseur{% else %}Créer un nouveau fournisseur{% endif %}</h1>
+  </div>
+
+  <div class="form-card">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <!-- Informations générales -->
+      <div class="form-section">
+        <h2><i class='bx bx-info-circle'></i> Informations générales</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Nom complet de l'organisation</label>
+            {{ form.nom_complet_organisation }}
+            {% if form.nom_complet_organisation.errors %}
+              <ul class="errorlist">{% for error in form.nom_complet_organisation.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Type fournisseur</label>
+            {{ form.type_fournisseur }}
+            <small>Local ou Foreign</small>
+            {% if form.type_fournisseur.errors %}
+              <ul class="errorlist">{% for error in form.type_fournisseur.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Type d'organisation</label>
+            {{ form.type_organisation }}
+            <small>SA, SARL, etc.</small>
+            {% if form.type_organisation.errors %}
+              <ul class="errorlist">{% for error in form.type_organisation.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Date d'enregistrement</label>
+            {{ form.date_enregistrement }}
+            <small>Format: JJ/MM/AAAA</small>
+            {% if form.date_enregistrement.errors %}
+              <ul class="errorlist">{% for error in form.date_enregistrement.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Téléphone</label>
+            {{ form.telephone }}
+            {% if form.telephone.errors %}
+              <ul class="errorlist">{% for error in form.telephone.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <ul class="errorlist">{% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>Site web</label>
+            {{ form.site_web }}
+            <small>Optionnel</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adresses -->
+      <div class="form-section">
+        <h2><i class='bx bx-map'></i> Adresses</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Adresse physique complète</label>
+            {{ form.adresse_physique }}
+            {% if form.adresse_physique.errors %}
+              <ul class="errorlist">{% for error in form.adresse_physique.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>Adresse du siège social</label>
+            {{ form.adresse_siege_social }}
+            <small>Si différente de l'adresse physique</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Représentant légal -->
+      <div class="form-section">
+        <h2><i class='bx bx-user-circle'></i> Représentant légal</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Nom du représentant légal</label>
+            {{ form.nom_representant_legal }}
+            {% if form.nom_representant_legal.errors %}
+              <ul class="errorlist">{% for error in form.nom_representant_legal.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Fonction</label>
+            {{ form.fonction_representant }}
+            {% if form.fonction_representant.errors %}
+              <ul class="errorlist">{% for error in form.fonction_representant.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Personne de contact -->
+      <div class="form-section">
+        <h2><i class='bx bx-phone-call'></i> Personne de contact</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Nom de la personne de contact</label>
+            {{ form.personne_contact }}
+            {% if form.personne_contact.errors %}
+              <ul class="errorlist">{% for error in form.personne_contact.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Téléphone</label>
+            {{ form.telephone_contact }}
+            {% if form.telephone_contact.errors %}
+              <ul class="errorlist">{% for error in form.telephone_contact.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Email</label>
+            {{ form.email_contact }}
+            {% if form.email_contact.errors %}
+              <ul class="errorlist">{% for error in form.email_contact.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents légaux -->
+      <div class="form-section">
+        <h2><i class='bx bx-file'></i> Documents légaux</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Registre de commerce</label>
+            {{ form.registre_commerce }}
+            {% if form.registre_commerce.errors %}
+              <ul class="errorlist">{% for error in form.registre_commerce.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Numéro compte contribuable</label>
+            {{ form.numero_compte_contribuable }}
+            {% if form.numero_compte_contribuable.errors %}
+              <ul class="errorlist">{% for error in form.numero_compte_contribuable.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Attestation de régularité fiscale</label>
+            {{ form.attestation_regularite_fiscale }}
+            {% if form.attestation_regularite_fiscale.errors %}
+              <ul class="errorlist">{% for error in form.attestation_regularite_fiscale.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Numéro CNPS</label>
+            {{ form.numero_cnps }}
+            {% if form.numero_cnps.errors %}
+              <ul class="errorlist">{% for error in form.numero_cnps.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Informations bancaires -->
+      <div class="form-section">
+        <h2><i class='bx bx-credit-card'></i> Informations bancaires</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Banque</label>
+            {{ form.banque }}
+            {% if form.banque.errors %}
+              <ul class="errorlist">{% for error in form.banque.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Agence</label>
+            {{ form.agence }}
+            {% if form.agence.errors %}
+              <ul class="errorlist">{% for error in form.agence.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">IBAN</label>
+            {{ form.iban }}
+            <small>24 positions pour les fournisseurs locaux</small>
+            {% if form.iban.errors %}
+              <ul class="errorlist">{% for error in form.iban.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>BIC/SWIFT</label>
+            {{ form.bic_swift }}
+            <small>Obligatoire pour les fournisseurs Foreign</small>
+          </div>
+          <div class="form-group">
+            <label class="required">Modalité de règlement</label>
+            {{ form.modalite_paiement }}
+            {% if form.modalite_paiement.errors %}
+              <ul class="errorlist">{% for error in form.modalite_paiement.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Branche d'activité -->
+      <div class="form-section">
+        <h2><i class='bx bx-category'></i> Branche d'activité</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Type catégorie</label>
+            {{ form.type_categorie }}
+            <small>Biens, Services ou Autres</small>
+            {% if form.type_categorie.errors %}
+              <ul class="errorlist">{% for error in form.type_categorie.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="required">Catégorie</label>
+            {{ form.categorie }}
+            {% if form.categorie.errors %}
+              <ul class="errorlist">{% for error in form.categorie.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Description catégorie</label>
+            {{ form.description_categorie }}
+            {% if form.description_categorie.errors %}
+              <ul class="errorlist">{% for error in form.description_categorie.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Statut -->
+      <div class="form-section">
+        <h2><i class='bx bx-check-circle'></i> Statut</h2>
+        <div class="checkbox-group">
+          {{ form.actif }}
+          <label for="{{ form.actif.id_for_label }}">Fournisseur actif</label>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class='bx bx-save'></i> {% if supplier %}Enregistrer les modifications{% else %}Créer le fournisseur{% endif %}
+        </button>
+        <a href="{% if supplier %}{% url 'suppliers:detail' supplier.pk %}{% else %}{% url 'suppliers:list' %}{% endif %}" class="btn btn-outline">
+          <i class='bx bx-x'></i> Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

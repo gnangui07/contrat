@@ -1,0 +1,57 @@
+{% extends 'base_project.html' %}
+{% block title %}Supprimer {{ supplier.nom_complet_organisation }}{% endblock %}
+{% block extra_css %}
+<style>
+  .delete-container { max-width: 600px; margin: 50px auto; padding: 20px; }
+  .delete-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #dc3545; }
+  .delete-card h1 { font-size: 24px; color: #dc3545; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .delete-card h1 i { font-size: 32px; }
+  .warning-box { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 6px; margin: 20px 0; }
+  .warning-box p { margin: 0; color: #856404; }
+  .supplier-info { background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; }
+  .supplier-info p { margin: 5px 0; color: #333; }
+  .supplier-info strong { color: #0052CC; }
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; margin-right: 10px; }
+  .btn-danger { background: #dc3545; color: white; }
+  .btn-danger:hover { background: #c82333; }
+  .btn-outline { background: white; color: #666; border: 1px solid #ddd; }
+  .btn-outline:hover { background: #f8f9fa; }
+  .action-buttons { display: flex; gap: 10px; margin-top: 30px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="delete-container">
+  <div class="delete-card">
+    <h1>
+      <i class='bx bx-error-circle'></i>
+      Confirmer la suppression
+    </h1>
+    
+    <div class="warning-box">
+      <p><strong>⚠️ Attention :</strong> Cette action est irréversible. Toutes les données associées à ce fournisseur seront définitivement supprimées.</p>
+    </div>
+    
+    <p>Êtes-vous sûr de vouloir supprimer le fournisseur suivant ?</p>
+    
+    <div class="supplier-info">
+      <p><strong>Nom :</strong> {{ supplier.nom_complet_organisation }}</p>
+      <p><strong>Type :</strong> {{ supplier.get_type_fournisseur_display }}</p>
+      <p><strong>Catégorie :</strong> {{ supplier.get_type_categorie_display }}</p>
+      <p><strong>Email :</strong> {{ supplier.email }}</p>
+      <p><strong>Téléphone :</strong> {{ supplier.telephone }}</p>
+    </div>
+    
+    <form method="post">
+      {% csrf_token %}
+      <div class="action-buttons">
+        <button type="submit" class="btn btn-danger">
+          <i class='bx bx-trash'></i> Oui, supprimer définitivement
+        </button>
+        <a href="{% url 'suppliers:list' %}" class="btn btn-outline">
+          <i class='bx bx-x'></i> Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

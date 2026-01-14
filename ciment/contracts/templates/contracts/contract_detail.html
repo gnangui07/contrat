@@ -1,0 +1,221 @@
+{% extends 'base_project.html' %}
+{% block title %}{{ contract.numero }} - Détail{% endblock %}
+{% block extra_css %}
+<style>
+  .detail-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
+  .detail-header { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-left: 4px solid #0052CC; }
+  .detail-header h1 { font-size: 28px; color: #0052CC; margin-bottom: 15px; }
+  .header-meta { display: flex; gap: 30px; flex-wrap: wrap; align-items: center; }
+  .badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .badge-pending { background: #fff3e0; color: #f57c00; }
+  .badge-active { background: #e8f5e9; color: #2e7d32; }
+  .badge-expired { background: #ffebee; color: #c62828; }
+  .badge-rejected { background: #f3e5f5; color: #7b1fa2; }
+  .badge-suspended { background: #e3f2fd; color: #1976d2; }
+  .info-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+  .info-section { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .info-section h2 { font-size: 18px; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #0052CC; display: flex; align-items: center; gap: 10px; }
+  .info-section h2 i { color: #0052CC; }
+  .info-row { display: flex; margin-bottom: 15px; }
+  .info-label { font-weight: 600; color: #666; min-width: 200px; }
+  .info-value { color: #333; flex: 1; }
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; margin-right: 10px; }
+  .btn-primary { background: #0052CC; color: white; }
+  .btn-primary:hover { background: #003D99; }
+  .btn-outline { background: white; color: #0052CC; border: 1px solid #0052CC; }
+  .btn-outline:hover { background: #0052CC; color: white; }
+  .btn-success { background: #2e7d32; color: white; }
+  .btn-success:hover { background: #1b5e20; }
+  .btn-danger { background: #c62828; color: white; }
+  .btn-danger:hover { background: #b71c1c; }
+  .alert { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .alert-warning { background: #fff3e0; color: #f57c00; border-left: 4px solid #f57c00; }
+  .alert-info { background: #e3f2fd; color: #1976d2; border-left: 4px solid #1976d2; }
+  .alert i { font-size: 24px; }
+  .text-warning { font-weight: 700; color: #f57c00; }
+  .text-success { font-weight: 700; color: #2e7d32; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="detail-container">
+  <div class="detail-header">
+    <h1>{{ contract.numero }}</h1>
+    <div class="header-meta">
+      <span class="badge {% if contract.status == 'pending' %}badge-pending{% elif contract.status == 'active' %}badge-active{% elif contract.status == 'expired' %}badge-expired{% elif contract.status == 'rejected' %}badge-rejected{% else %}badge-suspended{% endif %}">
+        {{ contract.get_status_display }}
+      </span>
+      <span style="color: #666;"><i class='bx bx-category'></i> {{ contract.get_type_display }}</span>
+      <span style="color: #666;"><i class='bx bx-money'></i> {{ contract.montant|floatformat:0 }} {{ contract.devise }}</span>
+      <span style="color: #666;"><i class='bx bx-calendar'></i> Créé le {{ contract.date_creation|date:"d/m/Y" }}</span>
+    </div>
+  </div>
+
+  <!-- Alertes -->
+  {% if contract.est_a_renouveler %}
+  <div class="alert alert-warning">
+    <i class='bx bx-error-circle'></i>
+    <div>
+      <strong>Attention !</strong> Ce contrat arrive à échéance dans {{ contract.jours_avant_echeance }} jours.
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Actions -->
+  <div style="margin-bottom: 20px;">
+    <a href="{% url 'contracts:edit' contract.pk %}" class="btn btn-primary">
+      <i class='bx bx-edit'></i> Modifier
+    </a>
+    {% if user.is_superuser and contract.status == 'pending' %}
+    <form action="{% url 'contracts:validate' contract.pk %}" method="post" style="display:inline-block;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success">
+        <i class='bx bx-check'></i> Valider
+      </button>
+    </form>
+    <form action="{% url 'contracts:reject' contract.pk %}" method="post" style="display:inline-block;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">
+        <i class='bx bx-x'></i> Rejeter
+      </button>
+    </form>
+    {% endif %}
+    <a href="{% url 'contracts:list' %}" class="btn btn-outline">
+      <i class='bx bx-arrow-back'></i> Retour à la liste
+    </a>
+  </div>
+
+  <div class="info-sections">
+    <!-- Informations générales -->
+    <div class="info-section">
+      <h2><i class='bx bx-info-circle'></i> Informations générales</h2>
+      <div class="info-row">
+        <span class="info-label">Numéro:</span>
+        <span class="info-value">{{ contract.numero }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Objet:</span>
+        <span class="info-value">{{ contract.objet }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Type:</span>
+        <span class="info-value">{{ contract.get_type_display }}</span>
+      </div>
+      {% if contract.type_contrat %}
+      <div class="info-row">
+        <span class="info-label">Type de contrat:</span>
+        <span class="info-value">{{ contract.type_contrat }}</span>
+      </div>
+      {% endif %}
+      <div class="info-row">
+        <span class="info-label">Statut:</span>
+        <span class="info-value">{{ contract.get_status_display }}</span>
+      </div>
+    </div>
+
+    <!-- Informations financières -->
+    <div class="info-section">
+      <h2><i class='bx bx-money'></i> Informations financières</h2>
+      <div class="info-row">
+        <span class="info-label">Montant:</span>
+        <span class="info-value" style="font-size: 20px; font-weight: 700; color: #0052CC;">{{ contract.montant|floatformat:2 }} {{ contract.devise }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Devise:</span>
+        <span class="info-value">{{ contract.get_devise_display }}</span>
+      </div>
+    </div>
+
+    <!-- Dates -->
+    <div class="info-section">
+      <h2><i class='bx bx-calendar'></i> Dates importantes</h2>
+      <div class="info-row">
+        <span class="info-label">Date de signature:</span>
+        <span class="info-value">{{ contract.date_signature|date:"d/m/Y" }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Date d'effet:</span>
+        <span class="info-value">{{ contract.date_effet|date:"d/m/Y" }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Date d'expiration:</span>
+        <span class="info-value">{{ contract.date_expiry|date:"d/m/Y" }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Préavis:</span>
+        <span class="info-value">{{ contract.preavis }} jours</span>
+      </div>
+      {% if contract.duree_contrat %}
+      <div class="info-row">
+        <span class="info-label">Durée du contrat:</span>
+        <span class="info-value">{{ contract.duree_contrat }} an(s)</span>
+      </div>
+      {% endif %}
+      <div class="info-row">
+        <span class="info-label">Jours avant échéance:</span>
+        <span class="info-value {% if contract.jours_avant_echeance < 90 %}text-warning{% else %}text-success{% endif %}">
+          {{ contract.jours_avant_echeance }} jours
+        </span>
+      </div>
+    </div>
+
+    <!-- Renouvellement -->
+    {% if contract.type_renouvellement %}
+    <div class="info-section">
+      <h2><i class='bx bx-refresh'></i> Renouvellement</h2>
+      <div class="info-row">
+        <span class="info-label">Type de renouvellement:</span>
+        <span class="info-value">{{ contract.get_type_renouvellement_display }}</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Fournisseur -->
+    <div class="info-section">
+      <h2><i class='bx bx-buildings'></i> Fournisseur</h2>
+      <div class="info-row">
+        <span class="info-label">Nom:</span>
+        <span class="info-value">
+          <a href="{% url 'suppliers:detail' contract.supplier.pk %}" style="color: #0052CC; text-decoration: none; font-weight: 600;">
+            {{ contract.supplier.nom_complet_organisation }}
+          </a>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Type:</span>
+        <span class="info-value">{{ contract.supplier.get_type_fournisseur_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email:</span>
+        <span class="info-value">{{ contract.supplier.email }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Téléphone:</span>
+        <span class="info-value">{{ contract.supplier.telephone }}</span>
+      </div>
+    </div>
+
+    <!-- Métadonnées -->
+    <div class="info-section">
+      <h2><i class='bx bx-user'></i> Métadonnées</h2>
+      <div class="info-row">
+        <span class="info-label">Créé par:</span>
+        <span class="info-value">{{ contract.created_by.get_full_name|default:contract.created_by.email }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Date de création:</span>
+        <span class="info-value">{{ contract.date_creation|date:"d/m/Y H:i" }}</span>
+      </div>
+      {% if contract.validated_by %}
+      <div class="info-row">
+        <span class="info-label">Validé par:</span>
+        <span class="info-value">{{ contract.validated_by.get_full_name|default:contract.validated_by.email }}</span>
+      </div>
+      {% endif %}
+      <div class="info-row">
+        <span class="info-label">Dernière modification:</span>
+        <span class="info-value">{{ contract.date_modification|date:"d/m/Y H:i" }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

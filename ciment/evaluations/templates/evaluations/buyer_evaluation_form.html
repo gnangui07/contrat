@@ -1,0 +1,271 @@
+{% extends 'base_project.html' %}
+{% block title %}{% if evaluation %}Modifier{% else %}Nouvelle{% endif %} Évaluation Acheteur{% endblock %}
+{% block extra_css %}
+<style>
+  .form-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .form-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .form-card h1 { font-size: 24px; color: #FF5722; margin-bottom: 30px; }
+  .form-group { margin-bottom: 25px; }
+  .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; font-size: 14px; }
+  .form-group .help-text { font-size: 12px; color: #666; margin-top: 5px; }
+  .form-control { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+  .form-control:focus { outline: none; border-color: #FF5722; box-shadow: 0 0 0 3px rgba(255,87,34,0.1); }
+  .criteria-section { background: #fff3e0; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+  .criteria-section h3 { font-size: 16px; color: #FF5722; margin-bottom: 15px; }
+  .criteria-item { margin-bottom: 20px; }
+  .criteria-description { background: white; padding: 12px; border-radius: 6px; margin-top: 8px; font-size: 13px; color: #666; border-left: 3px solid #FF5722; }
+  .btn { padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; margin-right: 10px; }
+  .btn-primary { background: #FF5722; color: white; }
+  .btn-primary:hover { background: #E64A19; }
+  .btn-outline { background: white; color: #666; border: 1px solid #ddd; }
+  .btn-outline:hover { background: #f8f9fa; }
+  .action-buttons { display: flex; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+  .errorlist { list-style: none; padding: 0; margin: 5px 0 0 0; }
+  .errorlist li { color: #dc3545; font-size: 13px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+  <div class="form-card">
+    <h1>
+      <i class='bx bx-shopping-bag'></i>
+      {% if evaluation %}Modifier l'évaluation acheteur{% else %}Nouvelle évaluation acheteur{% endif %}
+    </h1>
+    
+    <form method="post" id="buyerEvaluationForm">
+      {% csrf_token %}
+      
+      <!-- Sélection du fournisseur -->
+      <div class="form-group">
+        <label for="{{ form.supplier.id_for_label }}">{{ form.supplier.label }}</label>
+        {{ form.supplier }}
+        {{ form.supplier.errors }}
+      </div>
+
+      <!-- Critères d'évaluation acheteur -->
+      <div class="criteria-section">
+        <h3><i class='bx bx-check-circle'></i> Critères d'évaluation acheteur (0-10)</h3>
+        
+        <!-- Price Flexibility -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.price_flexibility.id_for_label }}">
+              {{ form.price_flexibility.label }}
+            </label>
+            {{ form.price_flexibility }}
+            {{ form.price_flexibility.errors }}
+            <div class="criteria-description" id="desc_price_flexibility">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+
+        <!-- RFX Deadline Compliance -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.rfx_deadline_compliance.id_for_label }}">
+              {{ form.rfx_deadline_compliance.label }}
+            </label>
+            {{ form.rfx_deadline_compliance }}
+            {{ form.rfx_deadline_compliance.errors }}
+            <div class="criteria-description" id="desc_rfx_deadline_compliance">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+
+        <!-- Advisory Capability -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.advisory_capability.id_for_label }}">
+              {{ form.advisory_capability.label }}
+            </label>
+            {{ form.advisory_capability }}
+            {{ form.advisory_capability.errors }}
+            <div class="criteria-description" id="desc_advisory_capability">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+
+        <!-- Relationship Quality -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.relationship_quality.id_for_label }}">
+              {{ form.relationship_quality.label }}
+            </label>
+            {{ form.relationship_quality }}
+            {{ form.relationship_quality.errors }}
+            <div class="criteria-description" id="desc_relationship_quality">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+
+        <!-- RFX Response Quality -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.rfx_response_quality.id_for_label }}">
+              {{ form.rfx_response_quality.label }}
+            </label>
+            {{ form.rfx_response_quality }}
+            {{ form.rfx_response_quality.errors }}
+            <div class="criteria-description" id="desc_rfx_response_quality">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+
+        <!-- Credit Policy -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.credit_policy.id_for_label }}">
+              {{ form.credit_policy.label }}
+            </label>
+            {{ form.credit_policy }}
+            {{ form.credit_policy.errors }}
+            <div class="criteria-description" id="desc_credit_policy">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Commentaires -->
+      <div class="form-group">
+        <label for="{{ form.comments.id_for_label }}">{{ form.comments.label }}</label>
+        {{ form.comments }}
+        {{ form.comments.errors }}
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="action-buttons">
+        <button type="submit" class="btn btn-primary">
+          <i class='bx bx-save'></i> {% if evaluation %}Modifier{% else %}Créer{% endif %} l'évaluation
+        </button>
+        <a href="{% url 'evaluations:buyer_list' %}" class="btn btn-outline">
+          <i class='bx bx-x'></i> Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Descriptions des critères acheteur
+const criteriaDescriptions = {
+  price_flexibility: {
+    0: 'Aucune flexibilité',
+    1: 'Aucune flexibilité',
+    2: 'Flexibilité très limitée',
+    3: 'Flexibilité très limitée',
+    4: 'Flexibilité limitée sur certains produits',
+    5: 'Flexibilité moyenne',
+    6: 'Flexibilité moyenne',
+    7: 'Bonne flexibilité',
+    8: 'Bonne flexibilité',
+    9: 'Très bonne flexibilité',
+    10: 'Excellente flexibilité avec négociations avantageuses'
+  },
+  rfx_deadline_compliance: {
+    0: 'Aucune réponse',
+    1: 'Aucune réponse',
+    2: 'Retard important sans justification',
+    3: 'Retard important sans justification',
+    4: 'Retard avec justification',
+    5: 'Retard avec justification',
+    6: 'Retard mineur',
+    7: 'Respect des délais',
+    8: 'Respect des délais',
+    9: 'Respect des délais',
+    10: 'Réponse en avance sur les délais'
+  },
+  advisory_capability: {
+    0: 'Aucun conseil',
+    1: 'Aucun conseil',
+    2: 'Conseils inadaptés',
+    3: 'Conseils inadaptés',
+    4: 'Conseils basiques',
+    5: 'Conseils basiques',
+    6: 'Conseils utiles mais incomplets',
+    7: 'Bons conseils',
+    8: 'Bons conseils',
+    9: 'Excellents conseils proactifs',
+    10: 'Expertise exceptionnelle et innovation'
+  },
+  relationship_quality: {
+    0: 'Aucun contact',
+    1: 'Aucun contact',
+    2: 'Interlocuteurs injoignables',
+    3: 'Interlocuteurs injoignables',
+    4: 'Réactivité faible (> 3 jours)',
+    5: 'Réactivité moyenne (2-3 jours)',
+    6: 'Réactivité moyenne (2-3 jours)',
+    7: 'Bonne réactivité (< 24h)',
+    8: 'Bonne réactivité (< 24h)',
+    9: 'Excellente réactivité (< 12h)',
+    10: 'Réactivité exceptionnelle et proactive'
+  },
+  rfx_response_quality: {
+    0: 'Aucune réponse',
+    1: 'Aucune réponse',
+    2: 'Réponses incomplètes',
+    3: 'Réponses incomplètes',
+    4: 'Réponses partielles',
+    5: 'Réponses acceptables',
+    6: 'Réponses acceptables',
+    7: 'Bonnes réponses complètes',
+    8: 'Bonnes réponses complètes',
+    9: 'Excellentes réponses détaillées',
+    10: 'Réponses exceptionnelles avec valeur ajoutée'
+  },
+  credit_policy: {
+    0: 'Paiement 100% à la commande',
+    1: 'Paiement 100% à la commande',
+    2: 'Acompte > 80%',
+    3: 'Acompte > 80%',
+    4: 'Acompte 60-80%',
+    5: 'Acompte 40-60%',
+    6: 'Acompte 40-60%',
+    7: 'Acompte 20-40%',
+    8: 'Acompte < 20%',
+    9: 'Acompte < 20%',
+    10: 'Aucun acompte requis / Crédit fournisseur'
+  }
+};
+
+// Fonction pour mettre à jour la description
+function updateDescription(criteriaName, value) {
+  const descElement = document.getElementById('desc_' + criteriaName);
+  if (descElement && criteriaDescriptions[criteriaName]) {
+    const description = criteriaDescriptions[criteriaName][value];
+    if (description) {
+      descElement.textContent = description;
+      descElement.style.display = 'block';
+    } else {
+      descElement.textContent = 'Sélectionnez une note pour voir la description';
+    }
+  }
+}
+
+// Ajouter les événements de changement
+document.addEventListener('DOMContentLoaded', function() {
+  const criteria = ['price_flexibility', 'rfx_deadline_compliance', 'advisory_capability', 'relationship_quality', 'rfx_response_quality', 'credit_policy'];
+  
+  criteria.forEach(function(criteriaName) {
+    const select = document.getElementById('id_' + criteriaName);
+    if (select) {
+      // Afficher la description initiale si une valeur est déjà sélectionnée
+      if (select.value) {
+        updateDescription(criteriaName, select.value);
+      }
+      
+      // Écouter les changements
+      select.addEventListener('change', function() {
+        updateDescription(criteriaName, this.value);
+      });
+    }
+  });
+});
+</script>
+{% endblock %}

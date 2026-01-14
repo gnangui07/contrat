@@ -1,0 +1,244 @@
+{% extends 'base_project.html' %}
+{% block title %}{% if evaluation %}Modifier{% else %}Nouvelle{% endif %} Évaluation{% endblock %}
+{% block extra_css %}
+<style>
+  .form-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .form-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .form-card h1 { font-size: 24px; color: #0052CC; margin-bottom: 30px; }
+  .form-group { margin-bottom: 25px; }
+  .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; font-size: 14px; }
+  .form-group .help-text { font-size: 12px; color: #666; margin-top: 5px; }
+  .form-control { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+  .form-control:focus { outline: none; border-color: #0052CC; box-shadow: 0 0 0 3px rgba(0,82,204,0.1); }
+  .criteria-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+  .criteria-section h3 { font-size: 16px; color: #0052CC; margin-bottom: 15px; }
+  .criteria-item { margin-bottom: 20px; }
+  .criteria-description { background: white; padding: 12px; border-radius: 6px; margin-top: 8px; font-size: 13px; color: #666; border-left: 3px solid #0052CC; }
+  .btn { padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; margin-right: 10px; }
+  .btn-primary { background: #0052CC; color: white; }
+  .btn-primary:hover { background: #003D99; }
+  .btn-outline { background: white; color: #666; border: 1px solid #ddd; }
+  .btn-outline:hover { background: #f8f9fa; }
+  .action-buttons { display: flex; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+  .errorlist { list-style: none; padding: 0; margin: 5px 0 0 0; }
+  .errorlist li { color: #dc3545; font-size: 13px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+  <div class="form-card">
+    <h1>
+      <i class='bx bx-star'></i>
+      {% if evaluation %}Modifier l'évaluation{% else %}Nouvelle évaluation de fournisseur{% endif %}
+    </h1>
+    
+    <form method="post" id="evaluationForm">
+      {% csrf_token %}
+      
+      <!-- Sélection du fournisseur -->
+      <div class="form-group">
+        <label for="{{ form.supplier.id_for_label }}">{{ form.supplier.label }}</label>
+        {{ form.supplier }}
+        {{ form.supplier.errors }}
+      </div>
+
+      <!-- Critères d'évaluation -->
+      <div class="criteria-section">
+        <h3><i class='bx bx-check-circle'></i> Critères d'évaluation (0-10)</h3>
+        
+        <!-- Delivery Compliance -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.delivery_compliance.id_for_label }}">
+              {{ form.delivery_compliance.label }}
+            </label>
+            {{ form.delivery_compliance }}
+            {{ form.delivery_compliance.errors }}
+            <div class="criteria-description" id="desc_delivery_compliance">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Timeline -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.delivery_timeline.id_for_label }}">
+              {{ form.delivery_timeline.label }}
+            </label>
+            {{ form.delivery_timeline }}
+            {{ form.delivery_timeline.errors }}
+            <div class="criteria-description" id="desc_delivery_timeline">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+
+        <!-- Advising Capability -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.advising_capability.id_for_label }}">
+              {{ form.advising_capability.label }}
+            </label>
+            {{ form.advising_capability }}
+            {{ form.advising_capability.errors }}
+            <div class="criteria-description" id="desc_advising_capability">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+
+        <!-- After Sales QOS -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.after_sales_qos.id_for_label }}">
+              {{ form.after_sales_qos.label }}
+            </label>
+            {{ form.after_sales_qos }}
+            {{ form.after_sales_qos.errors }}
+            <div class="criteria-description" id="desc_after_sales_qos">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+
+        <!-- Vendor Relationship -->
+        <div class="criteria-item">
+          <div class="form-group">
+            <label for="{{ form.vendor_relationship.id_for_label }}">
+              {{ form.vendor_relationship.label }}
+            </label>
+            {{ form.vendor_relationship }}
+            {{ form.vendor_relationship.errors }}
+            <div class="criteria-description" id="desc_vendor_relationship">
+              Sélectionnez une note pour voir la description
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Commentaires -->
+      <div class="form-group">
+        <label for="{{ form.comments.id_for_label }}">{{ form.comments.label }}</label>
+        {{ form.comments }}
+        {{ form.comments.errors }}
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="action-buttons">
+        <button type="submit" class="btn btn-primary">
+          <i class='bx bx-save'></i> {% if evaluation %}Modifier{% else %}Créer{% endif %} l'évaluation
+        </button>
+        <a href="{% url 'evaluations:list' %}" class="btn btn-outline">
+          <i class='bx bx-x'></i> Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Descriptions des critères
+const criteriaDescriptions = {
+  delivery_compliance: {
+    0: 'Non conforme',
+    1: 'Non conforme',
+    2: 'Conformité : 25% par rapport au besoin exprimé',
+    3: 'Conformité : 25% par rapport au besoin exprimé',
+    4: 'Conformité : 25% par rapport au besoin exprimé',
+    5: 'Conformité : 50% par rapport au besoin exprimé',
+    6: 'Conformité : 50% par rapport au besoin exprimé',
+    7: 'Conforme au besoin',
+    8: 'Conforme au besoin',
+    9: 'Conforme au besoin',
+    10: 'Supérieure / Meilleur que le besoin exprimé mais au même coût'
+  },
+  delivery_timeline: {
+    0: 'Aucune livraison effectuée',
+    1: 'Aucune livraison effectuée',
+    2: 'Retard dans la livraison sans le notifier',
+    3: 'Retard dans la livraison sans le notifier',
+    4: 'Retard négocié et non respect du nouveau planning avec explication donnée',
+    5: 'Retard négocié et non respect du nouveau planning avec explication donnée',
+    6: 'Retard négocié et non respect du nouveau planning avec explication donnée',
+    7: 'Respect des délais',
+    8: 'Respect des délais',
+    9: 'Respect des délais',
+    10: 'En avance sur le délai de livraison prévue'
+  },
+  advising_capability: {
+    0: 'Conseil inexistant',
+    1: 'Conseil inexistant',
+    2: 'Sur demande - Conseil donné mais pas utile',
+    3: 'Sur demande - Conseil donné mais pas utile',
+    4: 'Sur demande - Conseil donné utile mais incomplet',
+    5: 'Sur demande - Conseil donné utile mais incomplet',
+    6: 'Sur demande - Conseil donné utile mais incomplet',
+    7: 'Capacité à conseiller répond à nos attentes',
+    8: 'Capacité à conseiller répond à nos attentes',
+    9: 'Capacité à conseiller répond à nos attentes',
+    10: 'Transfert de compétence & formation régulière du client'
+  },
+  after_sales_qos: {
+    0: 'SAV inexistant',
+    1: 'SAV inexistant',
+    2: 'Pas adapté à nos attentes',
+    3: 'Pas adapté à nos attentes',
+    4: 'Adapté à 50% à nos attentes sans respecter les délais',
+    5: 'Adapté à 50% à nos attentes sans respecter les délais',
+    6: 'Adapté à 50% à nos attentes sans respecter les délais',
+    7: '100% des requêtes et des plaintes résolues dans les délais',
+    8: '100% des requêtes et des plaintes résolues dans les délais',
+    9: '100% des requêtes et des plaintes résolues dans les délais',
+    10: 'Anticipation des problèmes / Aucun incident n\'est à signaler'
+  },
+  vendor_relationship: {
+    0: 'Aucun contact',
+    1: 'Aucun contact',
+    2: 'Injoignable en dehors des visites / événements / pendant l\'exécution d\'une commande',
+    3: 'Injoignable en dehors des visites / événements / pendant l\'exécution d\'une commande',
+    4: 'Joignable après 2 ou 3 jours de relance, rappels …',
+    5: 'Joignable après 2 ou 3 jours de relance, rappels …',
+    6: 'Joignable après 2 ou 3 jours de relance, rappels …',
+    7: 'Bon contact / Prestataire réactif',
+    8: 'Bon contact / Prestataire réactif',
+    9: 'Bon contact / Prestataire réactif',
+    10: 'Bon contact / Prestataire très réactif'
+  }
+};
+
+// Fonction pour mettre à jour la description
+function updateDescription(criteriaName, value) {
+  const descElement = document.getElementById('desc_' + criteriaName);
+  if (descElement && criteriaDescriptions[criteriaName]) {
+    const description = criteriaDescriptions[criteriaName][value];
+    if (description) {
+      descElement.textContent = description;
+      descElement.style.display = 'block';
+    } else {
+      descElement.textContent = 'Sélectionnez une note pour voir la description';
+    }
+  }
+}
+
+// Ajouter les événements de changement
+document.addEventListener('DOMContentLoaded', function() {
+  const criteria = ['delivery_compliance', 'delivery_timeline', 'advising_capability', 'after_sales_qos', 'vendor_relationship'];
+  
+  criteria.forEach(function(criteriaName) {
+    const select = document.getElementById('id_' + criteriaName);
+    if (select) {
+      // Afficher la description initiale si une valeur est déjà sélectionnée
+      if (select.value) {
+        updateDescription(criteriaName, select.value);
+      }
+      
+      // Écouter les changements
+      select.addEventListener('change', function() {
+        updateDescription(criteriaName, this.value);
+      });
+    }
+  });
+});
+</script>
+{% endblock %}
